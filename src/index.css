@@ -1,0 +1,595 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* -------------------------------------------
+   0. Color Variables (Joveo Design System)
+-------------------------------------------- */
+:root {
+  --color-primary-main: #303F9F;
+  --color-primary-light: #E8EAF6;
+  --color-text-default: #3D4759;
+  --color-text-heading: #1A202C;
+  --color-accept-bg: #E6F4EA;
+  --color-accept-text: #1B5E20;
+  --color-partial-bg: #FFF4E5;
+  --color-partial-text: #EF6C00;
+  --color-reject-bg: #FCEBEA;
+  --color-reject-text: #C62828;
+  --color-border-light: #D1D5DB;
+  --color-disabled: #F5F5F5;
+
+  --gradient-primary: linear-gradient(135deg, #303F9F 0%, #3949AB 100%);
+  --gradient-secondary: linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%);
+  --gradient-success: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+  --gradient-surface: linear-gradient(135deg, #FFFFFF 0%, #F4F5FB 100%);
+}
+
+@layer base {
+  /* -------------------------------------------
+     1. Typography Defaults
+  -------------------------------------------- */
+  body {
+    @apply text-neutral-800 antialiased;
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 14px;
+    color: var(--color-text-default);
+    line-height: 1.5;
+    background: #F4F5FB;
+  }
+
+  h1, h2, h3, h4, h5 {
+    color: var(--color-text-heading);
+    font-weight: 600;
+  }
+
+  /* Typography Classes - Using Inter font with Joveo styling */
+  .heading-h1 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 44px;
+    color: #0F172A;
+  }
+
+  .heading-h2 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 36px;
+    color: #0F172A;
+  }
+
+  .heading-h3 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 32px;
+    color: #0F172A;
+  }
+
+  .heading-h4 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+    color: #0F172A;
+  }
+
+  .heading-h5 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 28px;
+    color: #0F172A;
+  }
+
+  .heading-h6 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: #0F172A;
+  }
+
+  .subtitle1-semibold {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: #1E293B;
+  }
+
+  .subtitle1-medium {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    color: #1E293B;
+  }
+
+  .subtitle1-regular {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    color: #1E293B;
+  }
+
+  .subtitle2-semibold {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    color: #1E293B;
+  }
+
+  .subtitle2-medium {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    color: #1E293B;
+  }
+
+  .subtitle2-regular {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    color: #1E293B;
+  }
+
+  .body1-semibold {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    color: #1E293B;
+  }
+
+  .body1-medium {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    color: #1E293B;
+  }
+
+  .body1-regular {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    color: #1E293B;
+  }
+
+  .body2-semibold {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+    color: #1E293B;
+  }
+
+  .body2-medium {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    color: #1E293B;
+  }
+
+  .body2-regular {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    color: #64748B;
+  }
+
+  .caption-semibold {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 16px;
+    color: #64748B;
+  }
+
+  .caption-medium {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 16px;
+    color: #64748B;
+  }
+
+  .caption-regular {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 16px;
+    color: #64748B;
+  }
+
+  /* Apply Inter to all elements by default */
+  * {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-neutral-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neutral-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-neutral-400;
+  }
+}
+
+/* -------------------------------------------
+   2. Banner Style
+-------------------------------------------- */
+
+.banner {
+  background-color: var(--color-primary-light);
+  border: 1px solid var(--color-primary-main);
+  border-radius: 8px;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--color-text-default);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.banner .banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-left: 16px;
+}
+.banner a {
+  color: var(--color-primary-main);
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.banner-dismiss {
+  font-size: 13px;
+  color: var(--color-primary-main);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* -------------------------------------------
+   3. Spacing Utilities (Based on Token Spec)
+-------------------------------------------- */
+.spacing-4   { margin: 0.25rem !important; }  /* 4px */
+.spacing-8   { margin: 0.5rem !important; }   /* 8px */
+.spacing-12  { margin: 0.75rem !important; }  /* 12px */
+.spacing-16  { margin: 1rem !important; }     /* 16px */
+.spacing-24  { margin: 1.5rem !important; }   /* 24px */
+.spacing-32  { margin: 2rem !important; }     /* 32px */
+
+.p-16  { padding: 1rem; }
+.px-16 { padding-left: 1rem; padding-right: 1rem; }
+.py-16 { padding-top: 1rem; padding-bottom: 1rem; }
+
+.modal-container {
+  padding: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* -------------------------------------------
+   4. CTA Buttons
+-------------------------------------------- */
+
+/* Primary Solid CTA (for Send All, Submit etc.) */
+.btn-primary-solid {
+  background-color: var(--color-primary-main);
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 14px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Special styling for main login CTA */
+.btn-primary-solid.w-full {
+  height: 44px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary-solid:hover {
+  background-color: #1A237E;
+}
+
+/* Slightly smaller version for "+ Add recommendation" */
+.btn-cta {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  height: 28px;
+}
+
+/* -------------------------------------------
+   5. Compact Buttons (View, Send etc.)
+-------------------------------------------- */
+.btn-compact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid var(--color-primary-main);
+  background-color: white;
+  color: var(--color-primary-main);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.btn-compact:hover {
+  background-color: #F2F5FF;
+  border-color: #3D5AFE;
+  color: #1A237E;
+}
+
+.btn-compact:active {
+  transform: scale(0.98);
+}
+
+.btn-compact:disabled,
+.btn-compact.disabled {
+  background-color: var(--color-disabled);
+  color: #BDBDBD;
+  border-color: #E0E0E0;
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Optional: Icon Sizing Inside Compact Button */
+.btn-compact svg,
+.btn-compact .icon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+}
+
+/* -------------------------------------------
+   6. Decision Buttons (Accept, Partial, Reject)
+-------------------------------------------- */
+
+.btn-accept {
+  background-color: var(--color-accept-bg);
+  color: var(--color-accept-text);
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  height: 32px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-accept:hover {
+  background-color: #D4E6D7;
+}
+
+.btn-partial {
+  background-color: var(--color-partial-bg);
+  color: var(--color-partial-text);
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  height: 32px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-partial:hover {
+  background-color: #FFE8CC;
+}
+
+.btn-reject {
+  background-color: var(--color-reject-bg);
+  color: var(--color-reject-text);
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  height: 32px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-reject:hover {
+  background-color: #F5D6D3;
+}
+
+/* -------------------------------------------
+   7. Pagination Styles (Text-based)
+-------------------------------------------- */
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--color-text-default);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.pagination-nav {
+  color: var(--color-primary-main);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+.pagination-nav:hover:not(.disabled) {
+  background-color: #F2F5FF;
+  color: #1A237E;
+}
+
+.pagination-nav.disabled {
+  color: #BDBDBD;
+  cursor: not-allowed;
+}
+
+.pagination-numbers {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 16px;
+}
+
+.pagination-number {
+  color: var(--color-text-default);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+  min-width: 28px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+}
+
+.pagination-number:hover {
+  background-color: #F2F5FF;
+  color: #1A237E;
+}
+
+.pagination-number.active {
+  background-color: var(--color-primary-main);
+  color: white;
+}
+
+/* -----------------------------------
+   Responsive: Smaller Screens
+   ----------------------------------- */
+@media (max-width: 480px) {
+  .btn-compact {
+    font-size: 10px;
+    height: 30px;
+    padding: 0 8px;
+  }
+  
+  .btn-primary-solid,
+  .btn-accept,
+  .btn-partial,
+  .btn-reject {
+    font-size: 11px;
+    padding: 5px 12px;
+    height: 30px;
+  }
+}
+
+@layer components {
+  .joveo-card {
+    @apply bg-white rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  .joveo-metric-card {
+    @apply bg-white rounded-lg border border-neutral-200 p-20 hover:shadow-sm transition-all duration-200;
+  }
+
+  .joveo-badge {
+    @apply inline-flex items-center gap-6 px-10 py-6 rounded-full text-xs font-medium;
+  }
+
+  .joveo-input {
+    @apply w-full px-16 py-12 text-sm border border-neutral-300 bg-white text-neutral-900 placeholder-neutral-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200;
+  }
+
+  .joveo-select {
+    @apply w-full pl-16 pr-40 py-12 text-sm border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 rounded-lg transition-all duration-200 appearance-none;
+  }
+
+  .joveo-gradient-bg {
+    background: #F4F5FB;
+  }
+
+  .joveo-header-gradient {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F4F5FB 100%);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
