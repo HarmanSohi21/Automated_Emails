@@ -7,7 +7,7 @@ import { LoadingSpinner } from '../common/LoadingSpinner';
 import { EmptyState } from '../common/EmptyState';
 import { Button } from '../common/Button';
 import { Dropdown } from '../common/Dropdown';
-import { Search, TrendingUp, DollarSign, Target, Zap, Check, X, AlertCircle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Search, TrendingUp, DollarSign, Target, Zap, Check, X, AlertCircle, ArrowUpRight, ArrowDownRight, Calendar } from 'lucide-react';
 import { RecommendationStatus } from '../../types';
 import { PartialAcceptModal } from './PartialAcceptModal';
 import { Toast } from '../common/Toast';
@@ -19,6 +19,9 @@ export const RecommendationList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [publisherFilter, setPublisherFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const [showPartialModal, setShowPartialModal] = useState(false);
   const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -89,6 +92,54 @@ export const RecommendationList: React.FC = () => {
       return false;
     }
     
+    // Date filtering
+    if (dateFilter !== 'all') {
+      const requestedDate = new Date(rec.requestedAt);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      const last7Days = new Date(today);
+      last7Days.setDate(last7Days.getDate() - 7);
+      
+      const last30Days = new Date(today);
+      last30Days.setDate(last30Days.getDate() - 30);
+      
+      switch (dateFilter) {
+        case 'today':
+          if (requestedDate.toDateString() !== today.toDateString()) {
+            return false;
+          }
+          break;
+        case 'yesterday':
+          if (requestedDate.toDateString() !== yesterday.toDateString()) {
+            return false;
+          }
+          break;
+        case 'last7days':
+          if (requestedDate < last7Days) {
+            return false;
+          }
+          break;
+        case 'last30days':
+          if (requestedDate < last30Days) {
+            return false;
+          }
+          break;
+        case 'custom':
+          if (customStartDate && customEndDate) {
+            const startDate = new Date(customStartDate);
+            const endDate = new Date(customEndDate);
+            endDate.setHours(23, 59, 59, 999); // Include the entire end date
+            
+            if (requestedDate < startDate || requestedDate > endDate) {
+              return false;
+            }
+          }
+          break;
+      }
+    }
+    
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       return (
@@ -110,7 +161,7 @@ export const RecommendationList: React.FC = () => {
   // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, publisherFilter, searchTerm, itemsPerPage]);
+  }, [statusFilter, publisherFilter, searchTerm, itemsPerPage, dateFilter, customStartDate, customEndDate]);
 
   const statusOptions = [
     { value: 'all', label: 'All Statuses' },
@@ -134,6 +185,15 @@ export const RecommendationList: React.FC = () => {
     { value: '15', label: '15' }
   ];
 
+  const dateFilterOptions = [
+    { value: 'all', label: 'All Dates' },
+    { value: 'today', label: 'Today' },
+    { value: 'yesterday', label: 'Yesterday' },
+    { value: 'last7days', label: 'Last 7 Days' },
+    { value: 'last30days', label: 'Last 30 Days' },
+    { value: 'custom', label: 'Custom Range' }
+  ];
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -152,7 +212,7 @@ export const RecommendationList: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex justify-between items-center mb-24">
+        <div className="flex justify-between items-start mb-24">
           <div className="flex-1 max-w-md">
             <div className="relative">
               <Search className="absolute left-12 top-1/2 transform -translate-y-1/2 h-16 w-16 text-neutral-400" />
@@ -166,20 +226,56 @@ export const RecommendationList: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex space-x-12 ml-20">
-            <Dropdown
-              options={publisherOptions}
-              value={publisherFilter}
-              onChange={setPublisherFilter}
-              containerWidth="160px"
-            />
+          <div className="flex flex-col space-y-12 ml-20">
+            <div className="flex space-x-12">
+              <Dropdown
+                options={publisherOptions}
+                value={publisherFilter}
+                onChange={setPublisherFilter}
+                containerWidth="160px"
+              />
+              
+              <Dropdown
+                options={statusOptions}
+                value={statusFilter}
+                onChange={setStatusFilter}
+                containerWidth="160px"
+              />
+              
+              <Dropdown
+                options={dateFilterOptions}
+                value={dateFilter}
+                onChange={setDateFilter}
+                containerWidth="160px"
+              />
+            </div>
             
-            <Dropdown
-              options={statusOptions}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              containerWidth="160px"
-            />
+            {dateFilter === 'custom' && (
+              <div className="flex items-center space-x-12 bg-neutral-50 border border-neutral-200 rounded-lg p-12">
+                <Calendar className="h-16 w-16 text-neutral-400" />
+                <div className="flex items-center space-x-8">
+                  <div className="flex flex-col">
+                    <label className="text-xs text-neutral-500 mb-4">From</label>
+                    <input
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      className="px-8 py-6 text-sm border border-neutral-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+                  <span className="text-neutral-400 mt-16">—</span>
+                  <div className="flex flex-col">
+                    <label className="text-xs text-neutral-500 mb-4">To</label>
+                    <input
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      className="px-8 py-6 text-sm border border-neutral-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
