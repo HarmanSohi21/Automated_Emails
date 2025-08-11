@@ -19,6 +19,11 @@ export const Select: React.FC<SelectProps> = ({
 }) => {
   const containerStyle = containerWidth === 'auto' ? {} : { width: containerWidth };
 
+  const baseClasses = "w-full pl-12 pr-32 py-8 text-sm border border-slate-300 bg-white rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none";
+  const textColor = "text-dark-grey";
+  
+  const classes = `${baseClasses} ${textColor} ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''} ${className}`;
+
   return (
     <div className="flex flex-col items-start gap-4" style={containerStyle}>
       {label && (
@@ -28,13 +33,7 @@ export const Select: React.FC<SelectProps> = ({
       )}
       <div className="relative w-full">
         <select
-          className={`
-            w-full pl-12 pr-32 py-8 text-sm border border-slate-300 bg-white text-slate-900 
-            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
-            rounded-md transition-all duration-200 appearance-none
-            ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
-            ${className}
-          `}
+          className={classes}
           {...props}
         >
           {placeholder && (

@@ -9,7 +9,7 @@ export const LoginPage: React.FC = () => {
   const handleDummyLogin = () => {
     setUser({
       email: 'harman@joveo.com',
-      name: 'Harman',
+      name: 'Harman Sohi',
       picture: undefined
     });
   };

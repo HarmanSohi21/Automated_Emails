@@ -16,6 +16,10 @@ export const Input: React.FC<InputProps> = ({
   ...props
 }) => {
   const containerStyle = containerWidth === 'auto' ? {} : { width: containerWidth };
+  const baseClasses = "w-full px-12 py-8 text-sm border border-slate-300 bg-white rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+  const textColor = "text-dark-grey";
+  
+  const classes = `${baseClasses} ${textColor} ${error ? 'border-red-500' : ''} ${className}`;
 
   return (
     <div className="flex flex-col items-start gap-4" style={containerStyle}>
@@ -25,13 +29,7 @@ export const Input: React.FC<InputProps> = ({
         </label>
       )}
       <input
-        className={`
-          w-full px-12 py-8 text-sm border border-slate-300 bg-white text-slate-900 
-          placeholder-slate-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 
-          focus:border-indigo-500 transition-all duration-200
-          ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
-          ${className}
-        `}
+        className={classes}
         {...props}
       />
       {error && (

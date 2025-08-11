@@ -1,7 +1,7 @@
 export type RecommendationType = 'CPC Bid' | 'CPA Goal' | 'Budget';
 export type EntityType = 'Client' | 'Campaign' | 'JobGroup';
-export type FeedStatus = 'Processing' | 'Ready' | 'Sent';
-export type RecommendationStatus = 'Ready to Send' | 'Sent' | 'Response Received' | 'Accepted' | 'Rejected' | 'Expired';
+export type FeedStatus = 'Processing' | 'Ready' | 'Sent' | 'Failed';
+export type RecommendationStatus = 'Sent' | 'Pending' | 'Accepted' | 'Partially accepted' | 'Rejected' | 'Expired';
 export type PublisherType = 'Flat CPC' | 'Flat CPA' | 'CPA' | 'CPC' | 'TCPA';
 export type Priority = 'Urgent' | 'High' | 'Medium' | 'Low';
 
@@ -17,10 +17,17 @@ export interface ClientPOC {
   role: string;
 }
 
+export interface ClientMetrics {
+  budget: number;
+  cpcBid: number;
+  cpaGoal: number;
+}
+
 export interface Client {
   id: string;
   name: string;
   poc: ClientPOC[];
+  metrics?: ClientMetrics;
 }
 
 export interface Publisher {
@@ -74,6 +81,20 @@ export interface EmailNotification {
   template: EmailTemplate;
 }
 
+export interface RecommendationMetric {
+  type: RecommendationType;
+  currentValue: number;
+  recommendedValue?: number;
+  isMandatory?: boolean;
+  isRequested?: boolean;
+  status?: 'pending' | 'accepted' | 'rejected';
+  potentialImprovement?: string;
+  // For partial acceptance tracking
+  acceptanceStatus?: 'accepted' | 'rejected' | 'pending';
+  appliedValue?: number;
+  rejectionReason?: string;
+}
+
 export interface Recommendation {
   id: string;
   entityId: string;
@@ -81,19 +102,18 @@ export interface Recommendation {
   entityType: EntityType;
   publisherId: string;
   publisherName: string;
+  clientId: string;
+  clientName: string;
+  metrics: RecommendationMetric[];
   level: 'Client' | 'Campaign' | 'JobGroup';
-  metrics: ('Bid' | 'Goal')[];
-  duration: 'This Month' | 'Next Month';
+  duration: string;
   status: RecommendationStatus;
   requestedAt: string;
-  respondedAt?: string;
   expiresAt?: string;
-  currentValue?: number;
-  recommendedValue?: number;
-  potentialImprovement?: string;
-  note?: string;
-  email?: EmailTemplate;
-  priority?: Priority;
+  respondedAt?: string;
+  requestType?: 'CSE_REQUEST' | 'PROACTIVE_PUBLISHER';
+  priority?: 'Urgent' | 'High' | 'Medium' | 'Low';
+  notes?: string; // Publisher notes for the overall recommendation
 }
 
 export interface RequestRecommendationPayload {
@@ -110,4 +130,12 @@ export interface SendEmailPayload {
   recipients: string[];
   subject: string;
   body: string;
+}
+
+export interface FilterChip {
+  id: string;
+  type: string;
+  label: string;
+  values: string[];
+  displayText: string;
 }

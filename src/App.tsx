@@ -2,7 +2,7 @@ import React from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AppProvider } from './context/AppContext';
-import { Dashboard } from './components/dashboard/Dashboard';
+import { MainLayout } from './components/layout/MainLayout';
 import { LoginPage } from './components/auth/LoginPage';
 import { useApp } from './context/AppContext';
 
@@ -51,52 +51,54 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     h1: {
       fontSize: '2.25rem',
       fontWeight: 700,
       lineHeight: 1.2,
-      color: '#0F172A',
     },
     h2: {
       fontSize: '1.875rem',
       fontWeight: 600,
       lineHeight: 1.3,
-      color: '#0F172A',
     },
     h3: {
       fontSize: '1.5rem',
       fontWeight: 600,
       lineHeight: 1.4,
-      color: '#0F172A',
     },
     h4: {
       fontSize: '1.25rem',
       fontWeight: 600,
       lineHeight: 1.4,
-      color: '#0F172A',
     },
     h5: {
       fontSize: '1.125rem',
       fontWeight: 600,
       lineHeight: 1.4,
-      color: '#0F172A',
     },
     h6: {
       fontSize: '1rem',
       fontWeight: 600,
       lineHeight: 1.4,
-      color: '#0F172A',
     },
     body1: {
-      fontSize: '0.875rem',
-      lineHeight: 1.5,
-      color: '#1E293B',
+      fontSize: '1rem',
+      lineHeight: 1.6,
     },
     body2: {
+      fontSize: '0.875rem',
+      lineHeight: 1.6,
+    },
+    caption: {
       fontSize: '0.75rem',
       lineHeight: 1.5,
-      color: '#64748B',
+    },
+    overline: {
+      fontSize: '0.75rem',
+      fontWeight: 600,
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
     },
     button: {
       fontSize: '0.875rem',
@@ -131,19 +133,86 @@ const theme = createTheme({
   },
 });
 
-function App() {
-  const AppContent = () => {
-    const { user } = useApp();
-    return user ? <Dashboard /> : <LoginPage />;
-  };
+// Error boundary component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error boundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <h1>Something went wrong.</h1>
+          <details style={{ whiteSpace: 'pre-wrap' }}>
+            <summary>Error details</summary>
+            {this.state.error && this.state.error.toString()}
+          </details>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+const AppContent = () => {
+  console.log('AppContent rendering');
+  
+  try {
+    const { user, isLoading } = useApp();
+    console.log('AppContent - user:', user, 'isLoading:', isLoading);
+    
+    if (isLoading) {
+      return (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          backgroundColor: '#F4F5FB'
+        }}>
+          <div>Loading...</div>
+        </div>
+      );
+    }
+    
+    return user ? <MainLayout /> : <LoginPage />;
+  } catch (error) {
+    console.error('Error in AppContent:', error);
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h1>Error in AppContent</h1>
+        <pre>{error instanceof Error ? error.message : String(error)}</pre>
+      </div>
+    );
+  }
+};
+
+function App() {
+  console.log('App rendering');
+  
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AppProvider>
-        <AppContent />
-      </AppProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AppProvider>
+          <AppContent />
+        </AppProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -6,9 +6,15 @@ import {
   SendEmailPayload,
   Publisher,
   RecommendationStatus,
-  User as AppUser
+  User as AppUser,
+  Client
 } from '../types';
-import { mockEmailNotifications, mockRecommendations, clients, publishers } from '../data/mockData';
+import { mockEmailNotifications, mockRecommendations, clients, publishers, instances, Instance } from '../data/mockData';
+
+interface UserPreferences {
+  selectedInstanceId: string | null;
+  selectedClientIds: string[];
+}
 
 interface AppContextType {
   user: AppUser | null;
@@ -16,8 +22,26 @@ interface AppContextType {
   logout: () => void;
   emailNotifications: EmailNotification[];
   recommendations: Recommendation[];
-  clients: { id: string; name: string; poc: { name: string; email: string; role: string; }[] }[];
+  clients: Client[];
   publishers: Publisher[];
+  instances: Instance[];
+  
+  // New global filter state
+  selectedInstanceId: string | null;
+  selectedClientIds: string[];
+  
+  // Filter methods
+  setSelectedInstance: (instanceId: string | null) => void;
+  setSelectedClients: (clientIds: string[]) => void;
+  
+  // Helper methods
+  getSelectedInstance: () => Instance | null;
+  getSelectedClients: () => Client[];
+  getAvailableClients: () => Client[];
+  getFilteredEmailNotifications: () => EmailNotification[];
+  getFilteredRecommendations: () => Recommendation[];
+  
+  // Existing methods
   selectedClient: string | null;
   sendEmail: (payload: SendEmailPayload) => Promise<EmailNotification>;
   requestRecommendation: (payload: RequestRecommendationPayload) => Promise<Recommendation>;
@@ -30,132 +54,229 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AppUser | null>(null);
-  const [emailNotifications, setEmailNotifications] = useState<EmailNotification[]>([]);
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  
+  // New global filter state
+  const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
 
-  const logout = () => {
-    setUser(null);
-  };
-
-  // Simulate loading data from API
+  // Load preferences from localStorage on mount
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setEmailNotifications(mockEmailNotifications);
-      setRecommendations(mockRecommendations);
+    const savedPreferences = localStorage.getItem('userPreferences');
+    if (savedPreferences) {
+      try {
+        const preferences: UserPreferences = JSON.parse(savedPreferences);
+        setSelectedInstanceId(preferences.selectedInstanceId);
+        setSelectedClientIds(preferences.selectedClientIds || []);
+      } catch (error) {
+        console.error('Error loading user preferences:', error);
+      }
+    } else {
+      // Set default instance for demo
+      const defaultInstance = instances[0];
+      if (defaultInstance) {
+        setSelectedInstanceId(defaultInstance.id);
+      }
+    }
+    
+    // Simulate loading
+    setTimeout(() => {
       setIsLoading(false);
     }, 1000);
-
-    return () => clearTimeout(timer);
   }, []);
 
-  // Send an email manually
-  const sendEmail = async (payload: SendEmailPayload): Promise<EmailNotification> => {
-    setIsLoading(true);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Create new email notification
-    const newEmailNotification: EmailNotification = {
-      id: crypto.randomUUID(),
-      ...payload,
-      status: 'Processing',
-      triggerType: 'Manual',
-      createdAt: new Date().toISOString(),
-    };
-    
-    // Update notifications state
-    setEmailNotifications(prev => [...prev, newEmailNotification]);
-    
-    // Simulate sending email
-    setTimeout(() => {
-      const success = Math.random() > 0.1;
-      
-      setEmailNotifications(prev => 
-        prev.map(notification => 
-          notification.id === newEmailNotification.id 
-            ? { 
-                ...notification, 
-                status: success ? 'Sent' : 'Failed',
-                sentAt: success ? new Date().toISOString() : undefined,
-                errorMessage: success ? undefined : 'Failed to send email: Connection timeout'
-              } 
-            : notification
-        )
-      );
-    }, 2000);
-    
-    setIsLoading(false);
-    return newEmailNotification;
+  // Save preferences to localStorage whenever they change
+  useEffect(() => {
+    if (selectedInstanceId !== null) {
+      const preferences: UserPreferences = {
+        selectedInstanceId,
+        selectedClientIds
+      };
+      localStorage.setItem('userPreferences', JSON.stringify(preferences));
+    }
+  }, [selectedInstanceId, selectedClientIds]);
+
+  const getClientsByInstance = (instanceId: string): Client[] => {
+    const instance = instances.find(inst => inst.id === instanceId);
+    return instance ? instance.clients : [];
   };
 
-  // Request a recommendation
-  const requestRecommendation = async (payload: RequestRecommendationPayload): Promise<Recommendation> => {
-    setIsLoading(true);
+  const setSelectedInstance = (instanceId: string | null) => {
+    setSelectedInstanceId(instanceId);
+    // Clear selected clients when changing instance
+    setSelectedClientIds([]);
+  };
+
+  const setSelectedClients = (clientIds: string[]) => {
+    setSelectedClientIds(clientIds);
+  };
+
+  const getSelectedInstance = (): Instance | null => {
+    return instances.find(instance => instance.id === selectedInstanceId) || null;
+  };
+
+  const getSelectedClients = (): Client[] => {
+    return selectedClientIds.map(id => 
+      clients.find(client => client.id === id)
+    ).filter(client => client !== undefined) as Client[];
+  };
+
+  const getAvailableClients = (): Client[] => {
+    if (!selectedInstanceId) return [];
+    return getClientsByInstance(selectedInstanceId);
+  };
+
+  // Filter data based on selections
+  const getFilteredEmailNotifications = (): EmailNotification[] => {
+    if (selectedClientIds.length === 0) return [];
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    return mockEmailNotifications.filter(notification => {
+      // Get selected client names
+      const selectedClientNames = selectedClientIds.map(clientId => {
+        const client = getAvailableClients().find(c => c.id === clientId);
+        return client?.name;
+      }).filter(name => name);
+      
+      // Check if notification belongs to any selected client
+      return selectedClientNames.some(clientName => {
+        return notification.template.clientName === clientName ||
+               notification.clientName === clientName ||
+               notification.entityName.includes(clientName || '') ||
+               notification.template.clientName.includes(clientName || '');
+      });
+    });
+  };
+
+  const getFilteredRecommendations = (): Recommendation[] => {
+    if (selectedClientIds.length === 0) return [];
     
-    // Create new recommendation
-    const newRecommendation: Recommendation = {
-      id: crypto.randomUUID(),
-      ...payload,
+    return mockRecommendations.filter(recommendation => {
+      // Get selected client names
+      const selectedClientNames = selectedClientIds.map(clientId => {
+        const client = getAvailableClients().find(c => c.id === clientId);
+        return client?.name;
+      }).filter(name => name);
+      
+      // Check if recommendation belongs to any selected client
+      return selectedClientNames.some(clientName => {
+        // Match by entity name containing client name
+        return recommendation.entityName.includes(clientName || '') ||
+               // Match by exact client name patterns
+               (clientName === 'Adecco Brazil' && recommendation.entityName.includes('Adecco Brazil')) ||
+               (clientName === 'Adecco France' && recommendation.entityName.includes('Adecco France')) ||
+               (clientName === 'Adecco Germany' && recommendation.entityName.includes('Adecco Germany')) ||
+               (clientName === 'Adecco Mexico' && recommendation.entityName.includes('Adecco Mexico')) ||
+               (clientName === 'Adecco Switzerland' && recommendation.entityName.includes('Adecco Switzerland')) ||
+               (clientName === 'Ashley Furniture' && recommendation.entityName.includes('Ashley Furniture')) ||
+               (clientName === 'Geico' && recommendation.entityName.includes('Geico')) ||
+               (clientName === 'DWA - Northrup Grumman' && recommendation.entityName.includes('DWA')) ||
+               (clientName === 'RSR' && recommendation.entityName.includes('RSR')) ||
+               (clientName === 'UberEats' && recommendation.entityName.includes('UberEats')) ||
+               (clientName === 'Uber Freight' && recommendation.entityName.includes('Uber Freight')) ||
+               (clientName === 'Uber' && recommendation.entityName.includes('Uber'));
+      });
+    });
+  };
+
+  const sendEmail = async (payload: SendEmailPayload): Promise<EmailNotification> => {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Create a mock notification based on the payload
+    const mockEntity = mockEmailNotifications[0]; // Use first notification as template
+    const newNotification: EmailNotification = {
+      id: `email-${Date.now()}`,
+      entityId: payload.entityId,
+      entityName: mockEntity.entityName,
+      entityType: mockEntity.entityType,
+      clientName: mockEntity.clientName,
+      publisherId: mockEntity.publisherId,
+      publisherName: mockEntity.publisherName,
+      subject: payload.subject,
+      recipients: payload.recipients,
+      status: 'Sent',
+      triggerType: 'Manual',
       createdAt: new Date().toISOString(),
+      sentAt: new Date().toISOString(),
+      template: mockEntity.template
     };
     
-    // Update recommendations state
-    setRecommendations(prev => [...prev, newRecommendation]);
+    return newNotification;
+  };
+
+  const requestRecommendation = async (payload: RequestRecommendationPayload): Promise<Recommendation> => {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    setIsLoading(false);
+    // Create a mock recommendation based on the payload
+    const mockRec = mockRecommendations[0]; // Use first recommendation as template
+    const newRecommendation: Recommendation = {
+      id: `rec-${Date.now()}`,
+      entityId: payload.entityId,
+      entityName: mockRec.entityName,
+      entityType: mockRec.entityType,
+      publisherId: payload.publisherId,
+      publisherName: mockRec.publisherName,
+      level: payload.level,
+      metrics: mockRec.metrics, // Use template metrics
+      duration: payload.duration,
+      status: 'Sent',
+      requestedAt: new Date().toISOString(),
+      requestType: 'CSE_REQUEST'
+    };
+    
     return newRecommendation;
   };
 
-  // Update recommendation status
   const updateRecommendationStatus = async (recommendationId: string, status: RecommendationStatus): Promise<void> => {
-    setIsLoading(true);
-    
-    // Simulate API delay
+    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Update recommendation status
-    setRecommendations(prev =>
-      prev.map(recommendation =>
-        recommendation.id === recommendationId
-          ? { ...recommendation, status }
-          : recommendation
-      )
-    );
-    
-    setIsLoading(false);
+    console.log(`Recommendation ${recommendationId} status updated to ${status}`);
   };
 
-  const value = {
+  const logout = (clearPreferences: boolean = false) => {
+    setUser(null);
+    if (clearPreferences) {
+      localStorage.removeItem('userPreferences');
+      setSelectedInstanceId(null);
+      setSelectedClientIds([]);
+    }
+  };
+
+  const value: AppContextType = {
     user,
     setUser,
     logout,
-    emailNotifications,
-    recommendations,
+    emailNotifications: getFilteredEmailNotifications(),
+    recommendations: getFilteredRecommendations(),
     clients,
     publishers,
+    instances,
+    selectedInstanceId,
+    selectedClientIds,
+    setSelectedInstance,
+    setSelectedClients,
+    getSelectedInstance,
+    getSelectedClients,
+    getAvailableClients,
+    getFilteredEmailNotifications,
+    getFilteredRecommendations,
     selectedClient,
     sendEmail,
     requestRecommendation,
     updateRecommendationStatus,
     setSelectedClient,
-    isLoading,
+    isLoading
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
-export const useApp = (): AppContextType => {
+export const useApp = () => {
   const context = useContext(AppContext);
-  
   if (context === undefined) {
     throw new Error('useApp must be used within an AppProvider');
   }
-  
   return context;
 };

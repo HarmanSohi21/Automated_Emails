@@ -1,194 +1,159 @@
-import { Entity, EmailNotification, Recommendation, EntityType, FeedStatus, Publisher, EmailTemplate, RecommendationStatus } from '../types';
+import { 
+  Publisher, 
+  EmailNotification, 
+  Recommendation, 
+  EntityType, 
+  FeedStatus,
+  RecommendationStatus,
+  RecommendationType,
+  RecommendationMetric,
+  EmailTemplate,
+  Client,
+  ClientPOC,
+  ClientMetrics
+} from '../types';
 
-// Mock clients with POC data
-export const clients = [
-  { 
-    id: 'client1', 
-    name: 'Acme Corporation',
-    metrics: {
-      budget: 150000,
-      cpcBid: 2.75,
-      cpaGoal: 45.00
-    },
-    poc: [
-      { name: 'John Smith', email: 'john.smith@acme.com', role: 'Recruitment Manager' },
-      { name: 'Sarah Johnson', email: 'sarah.j@acme.com', role: 'Talent Acquisition Lead' }
-    ]
-  },
-  { 
-    id: 'client2', 
-    name: 'GlobalTech Solutions',
-    poc: [
-      { name: 'Michael Chen', email: 'mchen@globaltech.com', role: 'HR Director' },
-      { name: 'Emily Brown', email: 'ebrown@globaltech.com', role: 'Recruitment Specialist' }
-    ]
-  },
-  { 
-    id: 'client3', 
-    name: 'Stellar Marketing',
-    poc: [
-      { name: 'David Wilson', email: 'dwilson@stellar.com', role: 'HR Manager' },
-      { name: 'Lisa Anderson', email: 'landerson@stellar.com', role: 'Talent Lead' }
-    ]
-  },
-  { 
-    id: 'client4', 
-    name: 'Quantum Enterprises',
-    poc: [
-      { name: 'Robert Taylor', email: 'rtaylor@quantum.com', role: 'Recruitment Director' },
-      { name: 'Amanda Martinez', email: 'amartinez@quantum.com', role: 'HR Specialist' }
-    ]
-  },
-];
+// Define Instance interface for account management
+export interface Instance {
+  id: string;
+  name: string;
+  clients: Client[];
+}
 
-// Mock campaigns with metrics
-export const mockCampaigns = [
-  {
-    id: 'campaign1',
-    name: 'Engineering Recruitment Q2',
-    clientId: 'client1',
-    metrics: {
-      budget: 45000,
-      cpcBid: 3.25,
-      cpaGoal: 40.00
-    }
-  },
-  {
-    id: 'campaign2',
-    name: 'Sales Team Expansion',
-    clientId: 'client1',
-    metrics: {
-      budget: 35000,
-      cpcBid: 2.50,
-      cpaGoal: 35.00
-    }
-  }
-];
+// Define Entity interface for campaigns and job groups
+export interface Entity {
+  id: string;
+  name: string;
+  type: EntityType;
+  clientId: string;
+  clientName: string;
+  createdAt: string;
+  feedStatus: FeedStatus;
+}
 
-// Mock job groups with metrics
-export const mockJobGroups = [
-  {
-    id: 'jg1',
-    name: 'Software Engineers',
-    clientId: 'client1',
-    campaignId: 'campaign1',
-    metrics: {
-      budget: 25000,
-      cpcBid: 3.75,
-      cpaGoal: 42.00
-    }
-  },
-  {
-    id: 'jg2',
-    name: 'Product Managers',
-    clientId: 'client1',
-    campaignId: 'campaign1',
-    metrics: {
-      budget: 20000,
-      cpcBid: 3.00,
-      cpaGoal: 38.00
-    }
-  }
-];
-
-// Mock publishers with more diverse types
 export const publishers: Publisher[] = [
-  { 
-    id: 'pub1', 
-    name: 'Indeed', 
-    type: 'Flat CPC',
-    email: ['indeed.partner@example.com', 'indeed.support@example.com']
+  // Filter priority publishers (matching filter options exactly)
+  { id: 'pub1', name: 'ZipRecruiter', type: 'CPC', email: ['support@ziprecruiter.com'] },
+  { id: 'pub2', name: 'Monster', type: 'Flat CPC', email: ['team@monster.com'] },
+  { id: 'pub3', name: 'Snagajob', type: 'CPC', email: ['hourly@snagajob.com'] },
+  { id: 'pub4', name: 'Jooble', type: 'CPA', email: ['support@jooble.org'] },
+  { id: 'pub5', name: 'OnTimeHire', type: 'Flat CPA', email: ['contact@ontimehire.com'] },
+  { id: 'pub6', name: 'Banya', type: 'CPA', email: ['team@banya.io'] },
+  { id: 'pub7', name: 'Indeed', type: 'CPC', email: ['partner@indeed.com'] },
+  { id: 'pub8', name: 'LinkedIn', type: 'CPA', email: ['support@linkedin.com'] },
+  { id: 'pub9', name: 'Glassdoor', type: 'CPC', email: ['publisher@glassdoor.com'] },
+  { id: 'pub10', name: 'CareerBuilder', type: 'CPA', email: ['partnerships@careerbuilder.com'] },
+  { id: 'pub11', name: 'FlexJobs', type: 'CPC', email: ['flex@flexjobs.com'] },
+  { id: 'pub12', name: 'Dice', type: 'CPC', email: ['tech@dice.com'] },
+  { id: 'pub13', name: 'AngelList', type: 'CPA', email: ['startups@angellist.com'] },
+  // Additional publishers for diversity
+  { id: 'pub14', name: 'SimplyHired', type: 'Flat CPA', email: ['publishers@simplyhired.com'] },
+  { id: 'pub15', name: 'PeoplePerHour', type: 'CPC', email: ['hourly@peopleperhour.com'] },
+  { id: 'pub16', name: 'ClearanceJobs', type: 'CPA', email: ['security@clearancejobs.com'] },
+  { id: 'pub17', name: 'TheLadders', type: 'Flat CPC', email: ['executives@theladders.com'] },
+  { id: 'pub18', name: 'JobStreet', type: 'CPA', email: ['asia@jobstreet.com'] },
+  { id: 'pub19', name: 'RemoteOK', type: 'Flat CPC', email: ['remote@remoteok.io'] },
+  { id: 'pub20', name: 'Upwork', type: 'CPA', email: ['freelance@upwork.com'] }
+];
+
+// Instance and Client Data
+export const instances: Instance[] = [
+  {
+    id: 'adecco',
+    name: 'Adecco',
+    clients: [
+      { id: 'adecco-brazil', name: 'Adecco Brazil', poc: [{ name: 'Carlos Silva', email: 'carlos@adecco.br', role: 'Account Manager' }], metrics: { budget: 50000, cpcBid: 2.5, cpaGoal: 45 } },
+      { id: 'adecco-france', name: 'Adecco France', poc: [{ name: 'Marie Dubois', email: 'marie@adecco.fr', role: 'Regional Director' }], metrics: { budget: 75000, cpcBid: 3.2, cpaGoal: 52 } },
+      { id: 'adecco-germany', name: 'Adecco Germany', poc: [{ name: 'Hans Mueller', email: 'hans@adecco.de', role: 'Operations Lead' }], metrics: { budget: 80000, cpcBid: 3.8, cpaGoal: 58 } },
+      { id: 'adecco-mexico', name: 'Adecco Mexico', poc: [{ name: 'Sofia Rodriguez', email: 'sofia@adecco.mx', role: 'Country Manager' }], metrics: { budget: 35000, cpcBid: 2.1, cpaGoal: 38 } },
+      { id: 'adecco-switzerland', name: 'Adecco Switzerland', poc: [{ name: 'Peter Zimmermann', email: 'peter@adecco.ch', role: 'Regional Head' }], metrics: { budget: 95000, cpcBid: 4.2, cpaGoal: 65 } }
+    ]
   },
-  { 
-    id: 'pub2', 
-    name: 'Monster', 
-    type: 'CPC',
-    email: ['monster.partner@example.com']
+  {
+    id: 'ashley-furniture',
+    name: 'Ashley Furniture',
+    clients: [
+      { id: 'ashley-furniture-main', name: 'Ashley Furniture', poc: [{ name: 'John Anderson', email: 'john@ashleyfurniture.com', role: 'HR Director' }], metrics: { budget: 120000, cpcBid: 2.8, cpaGoal: 48 } }
+    ]
   },
-  { 
-    id: 'pub3', 
-    name: 'ZipRecruiter', 
-    type: 'CPA',
-    email: ['zip.partner@example.com', 'zip.support@example.com']
+  {
+    id: 'geico',
+    name: 'Geico',
+    clients: [
+      { id: 'geico-main', name: 'Geico', poc: [{ name: 'Sarah Wilson', email: 'sarah@geico.com', role: 'Talent Acquisition Manager' }], metrics: { budget: 200000, cpcBid: 3.5, cpaGoal: 55 } }
+    ]
   },
-  { 
-    id: 'pub4', 
-    name: 'JobCloud', 
-    type: 'Flat CPA',
-    email: ['jobcloud.partner@example.com']
+  {
+    id: 'managed-services',
+    name: 'Managed Services',
+    clients: [
+      { id: 'dwa-northrup-grumman', name: 'DWA - Northrup Grumman', poc: [{ name: 'Michael Chen', email: 'michael@dwa.com', role: 'Defense Recruiting Lead' }], metrics: { budget: 300000, cpcBid: 5.2, cpaGoal: 85 } }
+    ]
   },
-  { 
-    id: 'pub5', 
-    name: 'CareerBuilder', 
-    type: 'TCPA',
-    email: ['cb.partner@example.com']
+  {
+    id: 'rsr',
+    name: 'RSR',
+    clients: [
+      { id: 'rsr-main', name: 'RSR', poc: [{ name: 'David Kim', email: 'david@rsr.com', role: 'Supply Chain Recruiter' }], metrics: { budget: 85000, cpcBid: 2.9, cpaGoal: 42 } }
+    ]
   },
-  { 
-    id: 'pub6', 
-    name: 'LinkedIn', 
-    type: 'CPC',
-    email: ['linkedin.partner@example.com']
-  },
-  { 
-    id: 'pub7', 
-    name: 'Glassdoor', 
-    type: 'Flat CPC',
-    email: ['glassdoor.partner@example.com']
-  },
-  { 
-    id: 'pub8', 
-    name: 'Dice', 
-    type: 'CPA',
-    email: ['dice.partner@example.com']
+  {
+    id: 'uber',
+    name: 'Uber',
+    clients: [
+      { id: 'ubereats', name: 'UberEats', poc: [{ name: 'Amanda Lee', email: 'amanda@uber.com', role: 'UberEats Hiring Manager' }], metrics: { budget: 180000, cpcBid: 4.1, cpaGoal: 68 } },
+      { id: 'uber-freight', name: 'Uber Freight', poc: [{ name: 'Robert Johnson', email: 'robert@uber.com', role: 'Freight Operations' }], metrics: { budget: 150000, cpcBid: 3.6, cpaGoal: 58 } },
+      { id: 'uber-main', name: 'Uber', poc: [{ name: 'Jennifer Davis', email: 'jennifer@uber.com', role: 'Global Talent Acquisition' }], metrics: { budget: 250000, cpcBid: 4.8, cpaGoal: 78 } },
+      { id: 'arena-io', name: 'Arena.io', poc: [{ name: 'Kevin Park', email: 'kevin@arena.io', role: 'Tech Recruiting Lead' }], metrics: { budget: 60000, cpcBid: 3.2, cpaGoal: 52 } },
+      { id: 'cellular-sales', name: 'Cellular Sales', poc: [{ name: 'Lisa Thompson', email: 'lisa@cellularsales.com', role: 'Retail Recruiter' }], metrics: { budget: 40000, cpcBid: 2.4, cpaGoal: 35 } },
+      { id: 'delaware-north', name: 'Delaware North', poc: [{ name: 'Mark Robinson', email: 'mark@delawarenorth.com', role: 'Hospitality Recruiter' }], metrics: { budget: 75000, cpcBid: 2.7, cpaGoal: 44 } },
+      { id: 'didi', name: 'DiDi', poc: [{ name: 'Zhang Wei', email: 'zhang@didiglobal.com', role: 'Asia Pacific Recruiter' }], metrics: { budget: 95000, cpcBid: 3.4, cpaGoal: 56 } },
+      { id: 'eri', name: 'ERI', poc: [{ name: 'Emma Garcia', email: 'emma@eri.com', role: 'Environmental Recruiter' }], metrics: { budget: 55000, cpcBid: 2.8, cpaGoal: 46 } },
+      { id: 'uberexchange', name: 'UberExchange', poc: [{ name: 'Ryan Martinez', email: 'ryan@uber.com', role: 'Exchange Platform Lead' }], metrics: { budget: 70000, cpcBid: 3.1, cpaGoal: 49 } },
+      { id: 'uberdrivers', name: 'UberDrivers', poc: [{ name: 'Nicole Brown', email: 'nicole@uber.com', role: 'Driver Acquisition Manager' }], metrics: { budget: 130000, cpcBid: 3.9, cpaGoal: 62 } }
+    ]
   }
 ];
 
-// Generate random values within specified ranges
-const generateValues = () => {
-  const cpcBid = 1.7;
-  const cpaGoal = 17;
-  const budget = 1150;
-  return { cpcBid, cpaGoal, budget };
+// Get all clients from all instances
+export const getAllClients = (): Client[] => {
+  return instances.flatMap(instance => instance.clients);
 };
 
-const calculateRecommendedValue = (type: 'CPC' | 'CPA' | 'Budget', currentValue: number, values: ReturnType<typeof generateValues>): number => {
-  switch (type) {
-    case 'CPC':
-    case 'CPA':
-    case 'Budget':
-    default:
-      return currentValue;
-  }
+export const clients = getAllClients();
+
+// Helper function to get client POCs (simplified version to avoid circular dependency)
+const getClientPOCs = (clientName: string): string[] => {
+  // Return dummy emails for demo
+  return [`poc1@${clientName.toLowerCase().replace(/\s+/g, '')}.com`, `poc2@${clientName.toLowerCase().replace(/\s+/g, '')}.com`];
 };
 
-const generateEmailTemplate = (clientName: string): EmailTemplate => {
-  const values = generateValues();
-  return {
+// Generate email template
+const generateEmailTemplate = (clientName: string): EmailTemplate => ({
     clientName,
-    campaignName: `${clientName} Campaign Q2 2025`,
-    campaignObjective: 'Increase job applications by 25%',
-    feedUrl: 'https://example.com/feed/123',
-    budget: values.budget,
-    budgetDuration: '3 months',
-    feedStartDate: '2025-04-01',
-    feedEndDate: '2025-06-30',
-    cpaGoalRequest: values.cpaGoal,
+  campaignName: `Demo Campaign for ${clientName}`,
+  campaignObjective: 'Increase qualified applications',
+  feedUrl: `https://feeds.example.com/${clientName.toLowerCase().replace(/\s+/g, '')}/jobs.xml`,
+  budget: Math.floor(Math.random() * 100000) + 10000,
+  budgetDuration: 'Monthly',
+  feedStartDate: new Date().toISOString().split('T')[0],
+  feedEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  cpaGoalRequest: Math.floor(Math.random() * 50) + 30,
     cpaGoalValidate: true,
-    cpcBidRequest: values.cpcBid,
+  cpcBidRequest: Math.floor(Math.random() * 5) + 2,
     cpcBidValidate: true,
-    numberOfJobs: Math.floor(Math.random() * 200) + 50,
-    jobTitles: ['Software Engineer', 'Product Manager', 'Data Scientist', 'Sales Representative', 'Marketing Manager'],
-    countries: ['United States', 'Canada', 'United Kingdom'],
-    states: ['California', 'New York', 'Texas', 'Florida', 'Illinois'],
-    cities: ['San Francisco', 'New York City', 'Austin', 'Chicago', 'Miami'],
-    sampleLandingPage: 'https://example.com/jobs/software-engineer',
-    note: 'Priority campaign for Q2 2025',
-    isEasyApply: Math.random() > 0.5,
-    partnerInsightsUrl: 'https://partner-insights.example.com/recommendations'
-  };
-};
+  numberOfJobs: Math.floor(Math.random() * 100) + 10,
+  jobTitles: ['Software Engineer', 'Marketing Manager', 'Sales Representative'],
+  countries: ['United States'],
+  states: ['California', 'New York', 'Texas'],
+  cities: ['San Francisco', 'New York', 'Austin'],
+  sampleLandingPage: `https://careers.${clientName.toLowerCase().replace(/\s+/g, '')}.com`,
+  note: 'Demo note for testing',
+  partnerInsightsUrl: 'https://insights.joveo.com',
+  isEasyApply: true
+});
 
-// Generate more diverse mock entities
+// Generate Entity
 const generateEntity = (
   id: string,
   name: string,
@@ -196,36 +161,17 @@ const generateEntity = (
   clientId: string,
   clientName: string,
   feedStatus: FeedStatus
-): Entity => {
-  return {
+): Entity => ({
     id,
     name,
     type,
     clientId,
     clientName,
-    createdAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000)).toISOString(),
-    feedStatus,
-  };
-};
+  createdAt: new Date().toISOString(),
+  feedStatus
+});
 
-// Extended mock entities for Acme Corporation
-export const mockEntities: Entity[] = [
-  generateEntity('entity1', 'Summer Campaign 2025', 'Campaign', 'client1', 'Acme Corporation', 'Ready'),
-  generateEntity('entity2', 'Engineering Jobs', 'JobGroup', 'client1', 'Acme Corporation', 'Ready'),
-  generateEntity('entity3', 'Sales Team Expansion', 'Campaign', 'client1', 'Acme Corporation', 'Sent'),
-  generateEntity('entity4', 'Marketing Department', 'JobGroup', 'client1', 'Acme Corporation', 'Ready'),
-  generateEntity('entity5', 'Product Development', 'Campaign', 'client1', 'Acme Corporation', 'Sent'),
-  generateEntity('entity6', 'Customer Support', 'JobGroup', 'client1', 'Acme Corporation', 'Ready'),
-  generateEntity('entity7', 'Finance Team', 'Campaign', 'client1', 'Acme Corporation', 'Ready'),
-  generateEntity('entity8', 'HR Recruitment', 'JobGroup', 'client1', 'Acme Corporation', 'Sent'),
-];
-
-const getClientPOCs = (clientName: string): string[] => {
-  const client = clients.find(c => c.name === clientName);
-  return client ? client.poc.map(p => p.email) : [];
-};
-
-// Generate more diverse email notifications
+// Generate email notification
 const generateEmailNotification = (
   id: string,
   entity: Entity,
@@ -251,79 +197,67 @@ const generateEmailNotification = (
     triggerType,
     createdAt,
     sentAt: status === 'Sent' ? new Date(Date.now() - createdAtOffset).toISOString() : undefined,
-    errorMessage: status === 'Failed' ? 'Failed to connect to mail server' : undefined,
+    errorMessage: status === 'Failed' ? 'Network connection timeout' : undefined,
     template: generateEmailTemplate(entity.clientName)
   };
 };
 
-// Generate mock email notifications with both "Due Today" and "Overdue" items
-export const mockEmailNotifications: EmailNotification[] = [
-  // Due Today notifications (exactly 24 hours ago)
-  ...Array.from({ length: 7 }, (_, index) => {
-    const entity = mockEntities[index % mockEntities.length];
-    return generateEmailNotification(
-      `email_due_today_${index + 1}`,
-      entity,
-      'Sent',
-      Math.random() > 0.5 ? 'Manual' : 'Automatic',
-      24 * 60 * 60 * 1000 // Exactly 24 hours ago
-    );
-  }),
+// Generate recommendation metrics
+const generateRecommendationMetrics = (type: RecommendationType): RecommendationMetric[] => {
+  const baseMetrics = [
+    {
+      type: 'CPC Bid' as RecommendationType,
+      currentValue: 2.50,
+      recommendedValue: 3.25,
+      isMandatory: true,
+      isRequested: true, // This was specifically requested
+      status: 'pending' as const,
+      potentialImprovement: '+30% more traffic'
+    },
+    {
+      type: 'CPA Goal' as RecommendationType,
+      currentValue: 45.00,
+      recommendedValue: 38.50,
+      isMandatory: false,
+      isRequested: false, // Optional metric, not requested
+      status: 'pending' as const,
+      potentialImprovement: '+14% efficiency'
+    },
+    {
+      type: 'Budget' as RecommendationType,
+      currentValue: 15000,
+      recommendedValue: 18000,
+      isMandatory: true,
+      isRequested: true, // This was specifically requested
+      status: 'pending' as const,
+      potentialImprovement: '+20% reach'
+    }
+  ];
   
-  // Overdue notifications (48-72 hours ago, with multiple reminders sent)
-  ...Array.from({ length: 7 }, (_, index) => {
-    const entity = mockEntities[(index + 3) % mockEntities.length];
-    const hoursAgo = 48 + (Math.random() * 24); // Between 48 and 72 hours ago
-    return generateEmailNotification(
-      `email_overdue_${index + 1}`,
-      entity,
-      'Sent',
-      Math.random() > 0.5 ? 'Manual' : 'Automatic',
-      Math.floor(hoursAgo * 60 * 60 * 1000)
-    );
-  }),
-  
-  // Regular notifications with various statuses
-  ...Array.from({ length: 16 }, (_, index) => {
-    const entity = mockEntities[index % mockEntities.length];
-    const statuses: FeedStatus[] = ['Ready', 'Sent'];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const offset = Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000); // Random offset within 30 days
-    
-    return generateEmailNotification(
-      `email_regular_${index + 1}`,
-      entity,
-      status,
-      Math.random() > 0.5 ? 'Manual' : 'Automatic',
-      offset
-    );
-  })
-].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return baseMetrics.filter(metric => metric.type === type || Math.random() > 0.5);
+};
 
-// Generate mock recommendations
+// Generate recommendation
 const generateRecommendation = (
   id: string,
   entity: Entity,
-  type: 'CPC' | 'CPA' | 'Budget',
-  status: RecommendationStatus
+  metricType: RecommendationType,
+  status: RecommendationStatus,
+  metrics: RecommendationMetric[] = [] // Added metrics parameter
 ): Recommendation => {
-  const values = generateValues();
-  let currentValue: number;
-  let recommendedValue: number;
-
-  switch (type) {
-    case 'CPC':
-    case 'CPA':
-    case 'Budget':
-    default:
-      currentValue = values.cpcBid;
-      recommendedValue = calculateRecommendedValue('CPC', currentValue, values);
-      break;
-  }
-
-  const improvement = ((recommendedValue - currentValue) / currentValue * 100).toFixed(1);
   const publisher = publishers[Math.floor(Math.random() * publishers.length)];
-  const requestedAt = new Date(Date.now() - Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000)).toISOString();
+  
+  // Sample publisher notes for overall recommendations
+  const sampleNotes = [
+    "CPA in this category tends to go high due to market demand. Recommend increasing both CPC bid and budget for better performance.",
+    "Difficult to hire category, requires more budget and higher CPA goals. The suggested metrics should improve quality of applicants.",
+    "Seasonal trend shows better performance with increased budget. Historical data supports these recommendations for Q4.",
+    "Competition is fierce in this market. Higher bids recommended for better visibility against competitors.",
+    "Based on historical data from similar campaigns, these adjustments will improve ROI by 15-20%.",
+    "Market analysis shows opportunity for growth with modest budget increase. CPA goals are realistic for this sector.",
+    "",  // Some recommendations won't have notes
+    ""
+  ];
   
   return {
     id,
@@ -332,26 +266,275 @@ const generateRecommendation = (
     entityType: entity.type,
     publisherId: publisher.id,
     publisherName: publisher.name,
-    type,
-    currentValue,
-    recommendedValue,
-    potentialImprovement: type === 'CPA' ? `-${improvement}%` : `+${improvement}%`,
-    level: entity.type,
-    metrics: ['Bid', 'Goal'],
-    duration: 'This Month',
+    clientId: entity.clientId,
+    clientName: entity.clientName,
+    level: entity.type === 'Client' ? 'Client' : entity.type === 'Campaign' ? 'Campaign' : 'JobGroup',
+    metrics: metrics, // Use the provided metrics
+    duration: Math.random() > 0.5 ? 'This Month' : 'Next Month',
     status,
-    requestedAt,
-    respondedAt: status !== 'Sent' ? new Date(Date.now() - Math.floor(Math.random() * 15 * 24 * 60 * 60 * 1000)).toISOString() : undefined,
-    expiresAt: status === 'Sent' ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() : undefined,
-    note: 'Recommendation based on historical performance data'
+    requestedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    expiresAt: new Date(Date.now() + Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString(),
+    requestType: Math.random() > 0.5 ? 'CSE_REQUEST' : 'PROACTIVE_PUBLISHER',
+    priority: ['Urgent', 'High', 'Medium', 'Low'][Math.floor(Math.random() * 4)] as 'Urgent' | 'High' | 'Medium' | 'Low',
+    notes: sampleNotes[Math.floor(Math.random() * sampleNotes.length)]
   };
 };
 
-// Generate more diverse mock recommendations
+// Enhanced mock email notifications - comprehensive coverage
+export const mockEmailNotifications: EmailNotification[] = [
+  // Generate 100+ comprehensive email notifications for all clients
+  ...Array.from({ length: 100 }, (_, index) => {
+    const allClients = getAllClients();
+    const clientIndex = index % allClients.length;
+    const client = allClients[clientIndex];
+    
+    const entityTypes: EntityType[] = ['Client', 'Campaign', 'JobGroup'];
+    const statuses: FeedStatus[] = ['Ready', 'Sent', 'Processing', 'Failed'];
+    const triggerTypes = ['Manual', 'Automatic'] as const;
+    
+    const entityType = entityTypes[index % entityTypes.length];
+    const status = statuses[Math.floor(index / 25) % statuses.length];
+    const triggerType = triggerTypes[index % triggerTypes.length];
+    
+    const entityNames = [
+      'Software Engineering', 'Marketing Campaign', 'Sales Operations', 'Customer Support',
+      'Data Analytics', 'Product Management', 'HR Operations', 'Finance Team',
+      'Quality Assurance', 'Business Development', 'Technical Support', 'Operations Management',
+      'Client Onboarding', 'Account Setup', 'Service Integration', 'Platform Configuration'
+    ];
+    
+    let entityName;
+    if (entityType === 'Client') {
+      const clientNames = ['Client Onboarding', 'Account Setup', 'Service Integration', 'Platform Configuration'];
+      entityName = `${clientNames[index % clientNames.length]} - ${client.name}`;
+    } else {
+      entityName = `${entityNames[index % entityNames.length]} ${index + 1} - ${client.name}`;
+    }
+    
+    const entity = generateEntity(
+      `entity-${client.id}-${index}`,
+      entityName,
+      entityType,
+      client.id,
+      client.name,
+      'Ready'
+    );
+    
+    const daysAgo = Math.floor(Math.random() * 30); // 0-30 days ago
+    const offset = daysAgo * 24 * 60 * 60 * 1000 + Math.floor(Math.random() * 24 * 60 * 60 * 1000);
+    
+    return generateEmailNotification(
+      `email-${index + 1}`,
+      entity,
+      status,
+      triggerType,
+      offset
+    );
+  }),
+
+  // Add specific Client notifications to ensure good representation
+  ...Array.from({ length: 15 }, (_, index) => {
+    const allClients = getAllClients();
+    const client = allClients[index % allClients.length];
+    
+    const clientEntityNames = [
+      'Client Onboarding Process', 'Account Verification', 'Service Activation', 
+      'Platform Integration', 'Initial Setup', 'Client Configuration'
+    ];
+    
+    const entity = generateEntity(
+      `client-entity-${index}`,
+      `${clientEntityNames[index % clientEntityNames.length]} - ${client.name}`,
+      'Client',
+      client.id,
+      client.name,
+      'Ready'
+    );
+    
+    const daysAgo = Math.floor(Math.random() * 7); // 0-7 days ago for recent Client notifications
+    const offset = daysAgo * 24 * 60 * 60 * 1000 + Math.floor(Math.random() * 24 * 60 * 60 * 1000);
+    
+    return generateEmailNotification(
+      `client-notification-${index}`,
+      entity,
+      'Ready', // Make most Client notifications ready to send
+      index % 2 === 0 ? 'Manual' : 'Automatic',
+      offset
+    );
+  }),
+
+  // Ensure every publisher appears at least once in Email Notifications
+  ...publishers.map((publisher, index) => {
+    const allClients = getAllClients();
+    const client = allClients[index % allClients.length];
+    
+    const entityTypes: EntityType[] = ['Campaign', 'JobGroup', 'Client'];
+    const entityType = entityTypes[index % entityTypes.length];
+    const statuses: FeedStatus[] = ['Ready', 'Sent', 'Processing'];
+    const status = statuses[index % statuses.length];
+    
+    const entityNames = [
+      'Publisher Specific Campaign', 'Channel Optimization', 'Performance Drive',
+      'Targeted Outreach', 'Strategic Initiative', 'Growth Campaign'
+    ];
+    
+    let entityName;
+    if (entityType === 'Client') {
+      entityName = `${publisher.name} Integration - ${client.name}`;
+    } else {
+      entityName = `${entityNames[index % entityNames.length]} (${publisher.name}) - ${client.name}`;
+    }
+    
+    const entity = generateEntity(
+      `pub-entity-${publisher.id}`,
+      entityName,
+      entityType,
+      client.id,
+      client.name,
+      status
+    );
+    
+    const daysAgo = Math.floor(Math.random() * 14); // 0-14 days ago
+    const offset = daysAgo * 24 * 60 * 60 * 1000 + Math.floor(Math.random() * 24 * 60 * 60 * 1000);
+    
+    return {
+      ...generateEmailNotification(
+        `pub-notification-${publisher.id}`,
+        entity,
+        status,
+        index % 2 === 0 ? 'Manual' : 'Automatic',
+        offset
+      ),
+      publisherId: publisher.id,
+      publisherName: publisher.name
+    };
+  })
+].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+// Enhanced mock recommendations - comprehensive coverage
 export const mockRecommendations: Recommendation[] = [
-  ...mockEntities.flatMap(entity => [
-    generateRecommendation(`rec_${entity.id}_1`, entity, 'CPC', 'Response Received'),
-    generateRecommendation(`rec_${entity.id}_2`, entity, 'CPA', 'Sent'),
-    generateRecommendation(`rec_${entity.id}_3`, entity, 'Budget', 'Accepted')
-  ])
+  
+  // Generate 100+ comprehensive recommendations for all clients
+  ...Array.from({ length: 100 }, (_, index) => {
+    const allClients = getAllClients();
+    const clientIndex = index % allClients.length;
+    const client = allClients[clientIndex];
+    
+    const entityTypes: EntityType[] = ['Campaign', 'JobGroup'];
+    const metricTypes: RecommendationType[] = ['CPC Bid', 'CPA Goal', 'Budget'];
+    const statuses: RecommendationStatus[] = ['Pending', 'Accepted', 'Sent', 'Partially accepted', 'Rejected', 'Expired'];
+    
+    const entityType = entityTypes[index % entityTypes.length];
+    const metricType = metricTypes[index % metricTypes.length];
+    const status = statuses[Math.floor(index / 16) % statuses.length];
+    
+    const entityNames = [
+      'Tech Recruitment Drive', 'Sales Performance Boost', 'Customer Acquisition',
+      'Brand Awareness Campaign', 'Lead Generation Initiative', 'Talent Pipeline',
+      'Market Expansion', 'Product Launch Support', 'Retention Strategy',
+      'Growth Optimization', 'Quality Improvement', 'Efficiency Enhancement'
+    ];
+    const entityName = `${entityNames[index % entityNames.length]} - ${client.name}`;
+    
+    const entity = generateEntity(
+      `rec-entity-${client.id}-${index}`,
+      entityName,
+      entityType,
+      client.id,
+      client.name,
+      'Ready'
+    );
+    
+    // Generate metrics with acceptance status for partially accepted recommendations
+    const generateMetricsWithStatus = () => {
+      const metrics = generateRecommendationMetrics(metricType);
+      
+      // If status is "Partially accepted", add acceptance status to metrics
+      if (status === 'Partially accepted') {
+        return metrics.map((metric, i) => ({
+          ...metric,
+          acceptanceStatus: (i === 0 ? 'accepted' : i === 1 ? 'rejected' : 'accepted') as 'accepted' | 'rejected' | 'pending'
+        }));
+      }
+      
+      return metrics;
+    };
+    
+    return generateRecommendation(
+      `rec-${index + 1}`,
+      entity,
+      metricType,
+      status,
+      generateMetricsWithStatus()
+    );
+  }),
+
+  // Ensure every publisher appears at least once in Recommendations
+  ...publishers.map((publisher, index) => {
+    const allClients = getAllClients();
+    const client = allClients[index % allClients.length];
+    
+    const entityTypes: EntityType[] = ['Campaign', 'JobGroup'];
+    const metricTypes: RecommendationType[] = ['CPC Bid', 'CPA Goal', 'Budget'];
+    const statuses: RecommendationStatus[] = ['Pending', 'Accepted', 'Sent', 'Partially accepted'];
+    
+    const entityType = entityTypes[index % entityTypes.length];
+    const metricType = metricTypes[index % metricTypes.length];
+    const status = statuses[index % statuses.length];
+    
+    const entityNames = [
+      'Publisher Optimization Campaign', 'Channel Performance Drive', 'Revenue Enhancement',
+      'Conversion Improvement', 'Cost Efficiency Project', 'ROI Maximization'
+    ];
+    
+    const entityName = `${entityNames[index % entityNames.length]} (${publisher.name}) - ${client.name}`;
+    
+    const entity = generateEntity(
+      `pub-rec-entity-${publisher.id}`,
+      entityName,
+      entityType,
+      client.id,
+      client.name,
+      'Ready'
+    );
+    
+    return {
+      ...generateRecommendation(
+        `pub-rec-${publisher.id}`,
+        entity,
+        metricType,
+        status,
+        generateRecommendationMetrics(metricType) // Add the metrics parameter
+      ),
+      publisherId: publisher.id,
+      publisherName: publisher.name
+    };
+  })
+].sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
+
+// Mock Campaigns and Job Groups for RequestRecommendationForm
+export const mockCampaigns = [
+  { id: 'camp-1', name: 'Software Engineering Campaign', clientId: 'adecco-brazil', clientName: 'Adecco Brazil', metrics: { budget: 25000, cpcBid: 3.25, cpaGoal: 85.00 } },
+  { id: 'camp-2', name: 'Marketing Campaign', clientId: 'adecco-france', clientName: 'Adecco France', metrics: { budget: 45000, cpcBid: 2.80, cpaGoal: 120.00 } },
+  { id: 'camp-3', name: 'Sales Operations', clientId: 'adecco-germany', clientName: 'Adecco Germany', metrics: { budget: 35000, cpcBid: 4.10, cpaGoal: 95.00 } },
+  { id: 'camp-4', name: 'Customer Support', clientId: 'ashley-furniture-main', clientName: 'Ashley Furniture', metrics: { budget: 18000, cpcBid: 2.45, cpaGoal: 70.00 } },
+  { id: 'camp-5', name: 'Insurance Sales', clientId: 'geico-main', clientName: 'Geico', metrics: { budget: 65000, cpcBid: 5.20, cpaGoal: 150.00 } },
+  { id: 'camp-6', name: 'Defense Technology', clientId: 'dwa-northrup-grumman', clientName: 'DWA - Northrup Grumman', metrics: { budget: 85000, cpcBid: 6.75, cpaGoal: 200.00 } },
+  { id: 'camp-7', name: 'Driver Acquisition', clientId: 'ubereats', clientName: 'UberEats', metrics: { budget: 32000, cpcBid: 3.90, cpaGoal: 110.00 } },
+  { id: 'camp-8', name: 'Freight Logistics', clientId: 'uber-freight', clientName: 'Uber Freight', metrics: { budget: 58000, cpcBid: 4.85, cpaGoal: 175.00 } },
+  { id: 'camp-9', name: 'Tech Innovation', clientId: 'uber-main', clientName: 'Uber', metrics: { budget: 125000, cpcBid: 7.20, cpaGoal: 250.00 } },
+  { id: 'camp-10', name: 'Retail Distribution', clientId: 'rsr-main', clientName: 'RSR', metrics: { budget: 22000, cpcBid: 2.95, cpaGoal: 80.00 } }
+];
+
+export const mockJobGroups = [
+  { id: 'jg-1', name: 'Engineering Team', clientId: 'adecco-brazil', clientName: 'Adecco Brazil', metrics: { budget: 15000, cpcBid: 2.85, cpaGoal: 65.00 } },
+  { id: 'jg-2', name: 'Finance Department', clientId: 'adecco-france', clientName: 'Adecco France', metrics: { budget: 28000, cpcBid: 3.40, cpaGoal: 90.00 } },
+  { id: 'jg-3', name: 'Business Development', clientId: 'adecco-germany', clientName: 'Adecco Germany', metrics: { budget: 42000, cpcBid: 4.20, cpaGoal: 125.00 } },
+  { id: 'jg-4', name: 'Warehouse Management', clientId: 'ashley-furniture-main', clientName: 'Ashley Furniture', metrics: { budget: 12000, cpcBid: 2.10, cpaGoal: 55.00 } },
+  { id: 'jg-5', name: 'Claims Processing', clientId: 'geico-main', clientName: 'Geico', metrics: { budget: 38000, cpcBid: 4.60, cpaGoal: 115.00 } },
+  { id: 'jg-6', name: 'Cybersecurity Operations', clientId: 'dwa-northrup-grumman', clientName: 'DWA - Northrup Grumman', metrics: { budget: 72000, cpcBid: 6.15, cpaGoal: 185.00 } },
+  { id: 'jg-7', name: 'Restaurant Partnerships', clientId: 'ubereats', clientName: 'UberEats', metrics: { budget: 19500, cpcBid: 3.15, cpaGoal: 75.00 } },
+  { id: 'jg-8', name: 'Fleet Management', clientId: 'uber-freight', clientName: 'Uber Freight', metrics: { budget: 48000, cpcBid: 4.95, cpaGoal: 145.00 } },
+  { id: 'jg-9', name: 'Global Operations', clientId: 'uber-main', clientName: 'Uber', metrics: { budget: 95000, cpcBid: 6.80, cpaGoal: 220.00 } },
+  { id: 'jg-10', name: 'Supply Chain', clientId: 'rsr-main', clientName: 'RSR', metrics: { budget: 16500, cpcBid: 2.65, cpaGoal: 70.00 } }
 ];

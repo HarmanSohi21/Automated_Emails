@@ -2,7 +2,7 @@ import React, { ButtonHTMLAttributes } from 'react';
 import { LoadingSpinner } from './LoadingSpinner';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'ghost' | 'accept' | 'partial' | 'reject' | 'primary-solid' | 'cta';
+  variant?: 'primary' | 'secondary' | 'tertiary' | 'success' | 'error' | 'warning' | 'ghost' | 'accept' | 'partial' | 'reject' | 'primary-solid' | 'cta';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   icon?: React.ReactNode;
@@ -24,7 +24,10 @@ export const Button: React.FC<ButtonProps> = ({
   const getVariantClass = () => {
     switch (variant) {
       case 'primary-solid':
+      case 'primary':
         return 'btn-primary-solid';
+      case 'tertiary':
+        return 'btn-tertiary';
       case 'cta':
         return 'btn-primary-solid btn-cta';
       case 'accept':
@@ -34,8 +37,7 @@ export const Button: React.FC<ButtonProps> = ({
       case 'reject':
         return 'btn-reject';
       case 'secondary':
-        return 'btn-compact';
-      case 'primary':
+      case 'ghost':
       default:
         return 'btn-compact';
     }

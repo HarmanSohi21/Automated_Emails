@@ -4,40 +4,39 @@ import { GlobalFilters } from '../filters/GlobalFilters';
 import { EmailNotificationList } from '../emails/EmailNotificationList';
 import { RecommendationList } from '../recommendations/RecommendationList';
 import { RequestRecommendationForm } from '../recommendations/RequestRecommendationForm';
-import { ReminderDashboard } from '../reminders/ReminderDashboard';
+// import { ReminderDashboard } from '../reminders/ReminderDashboard';
 import { ProfileSection } from '../profile/ProfileSection';
+import { RecommendationDemo } from '../recommendations/RecommendationDemo';
 import { BellRing, Mail, TrendingUp } from 'lucide-react';
 
-type ActiveCard = 'reminders' | 'recommendations' | 'emails';
+type ActiveCard = /* 'reminders' | */ 'recommendations' | 'emails';
 
 export const Dashboard: React.FC = () => {
   const { emailNotifications, recommendations } = useApp();
-  const [activeCard, setActiveCard] = useState<ActiveCard>('reminders');
+  const [activeCard, setActiveCard] = useState<ActiveCard>('recommendations');
 
   // Calculate metrics
-  const reminderCount = emailNotifications.filter(email => {
-    const sentDate = new Date(email.sentAt || '');
-    const now = new Date();
-    const hoursSinceEmail = Math.floor((now.getTime() - sentDate.getTime()) / (1000 * 60 * 60));
-    return hoursSinceEmail >= 24 && email.status === 'Sent';
-  }).length;
+  // const reminderCount = emailNotifications.filter(email => {
+  //   const sentDate = new Date(email.sentAt || '');
+  //   const now = new Date();
+  //   const hoursSinceEmail = Math.floor((now.getTime() - sentDate.getTime()) / (1000 * 60 * 60));
+  //   return hoursSinceEmail >= 24 && email.status === 'Sent';
+  // }).length;
 
   const readyToSendCount = emailNotifications.filter(email => email.status === 'Ready').length;
   
-  const pendingRecommendationsCount = recommendations.filter(rec => 
-    rec.status === 'Response Received'
-  ).length;
+  const pendingRecommendations = recommendations.filter(rec => rec.status === 'Pending');
 
   const totalRecommendations = recommendations.length;
 
   const getCardTitle = (cardType: ActiveCard) => {
     switch (cardType) {
-      case 'reminders':
-        return 'Reminder Dashboard';
+      // case 'reminders':
+      //   return 'Reminder Dashboard';
       case 'recommendations':
         return 'Recommendations Hub';
       case 'emails':
-        return 'Email Management';
+        return 'New Entity Notification';
       default:
         return '';
     }
@@ -45,12 +44,12 @@ export const Dashboard: React.FC = () => {
 
   const getCardDescription = (cardType: ActiveCard) => {
     switch (cardType) {
-      case 'reminders':
-        return 'Tracking follow-ups for publisher responses: First reminder after 24 hours, second reminder after 48 hours. After 72 hours without response, the item requires manual intervention.';
+      // case 'reminders':
+      //   return 'Tracking follow-ups for publisher responses: First reminder after 24 hours, second reminder after 48 hours. After 72 hours without response, the item requires manual intervention.';
       case 'recommendations':
         return 'Request optimization recommendations from publishers and review their responses for CPC bids, CPA goals, and budget allocation.';
       case 'emails':
-        return 'Manage and track email notifications sent to publishers for newly setup entities.';
+        return 'Manage and track email notifications sent to publishers for newly setup entities in MOJO.';
       default:
         return '';
     }
@@ -58,8 +57,8 @@ export const Dashboard: React.FC = () => {
 
   const renderActiveContent = () => {
     switch (activeCard) {
-      case 'reminders':
-        return <ReminderDashboard />;
+      // case 'reminders':
+      //   return <ReminderDashboard />;
       case 'recommendations':
         return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-24">
@@ -74,7 +73,16 @@ export const Dashboard: React.FC = () => {
       case 'emails':
         return <EmailNotificationList />;
       default:
-        return <ReminderDashboard />;
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-24">
+            <div className="lg:col-span-2">
+              <RecommendationList />
+            </div>
+            <div>
+              <RequestRecommendationForm />
+            </div>
+          </div>
+        );
     }
   };
 
@@ -103,8 +111,9 @@ export const Dashboard: React.FC = () => {
       
       <main className="max-w-7xl mx-auto px-24 py-32">
         {/* Top Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-24 mb-40">
-          {/* Reminders Card */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-24 mb-40">
+          {/* Reminders Card - COMMENTED OUT */}
+          {/* 
           <div 
             className={`relative overflow-hidden cursor-pointer transition-all duration-300 rounded-xl ${
               activeCard === 'reminders' 
@@ -113,7 +122,6 @@ export const Dashboard: React.FC = () => {
             }`}
             onClick={() => setActiveCard('reminders')}
           >
-            {/* Top ribbon for selected state */}
             {activeCard === 'reminders' && (
               <div className="absolute top-0 left-0 right-0 h-2 bg-[#303F9F]"></div>
             )}
@@ -146,6 +154,7 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
+          */}
 
           {/* Recommendations Card */}
           <div 
@@ -185,7 +194,7 @@ export const Dashboard: React.FC = () => {
                     {totalRecommendations}
                   </p>
                   <p className="text-sm text-neutral-500">
-                    {pendingRecommendationsCount} pending review
+                    {pendingRecommendations.length} pending review
                   </p>
                 </div>
               </div>
@@ -216,7 +225,7 @@ export const Dashboard: React.FC = () => {
                     <p className={`text-sm font-medium transition-colors duration-300 ${
                       activeCard === 'emails' ? 'text-[#303F9F]' : 'text-neutral-600'
                     }`}>
-                      Email Management
+                      New Entity Notification
                     </p>
                     {activeCard === 'emails' && (
                       <div className="w-6 h-6 rounded-full bg-[#303F9F] flex items-center justify-center">
@@ -242,7 +251,7 @@ export const Dashboard: React.FC = () => {
         <div className="mb-32 p-24 bg-white rounded-xl border border-neutral-200 shadow-sm">
           <div className="flex items-center space-x-16">
             <div className="w-40 h-40 rounded-xl bg-[#E8EAF6] border border-[#303F9F] flex items-center justify-center">
-              {activeCard === 'reminders' && <BellRing className="h-20 w-20 text-[#303F9F]" />}
+              {/* {activeCard === 'reminders' && <BellRing className="h-20 w-20 text-[#303F9F]" />} */}
               {activeCard === 'recommendations' && <TrendingUp className="h-20 w-20 text-[#303F9F]" />}
               {activeCard === 'emails' && <Mail className="h-20 w-20 text-[#303F9F]" />}
             </div>
@@ -258,6 +267,11 @@ export const Dashboard: React.FC = () => {
         {/* Active Content */}
         <div className="transition-all duration-300">
           {renderActiveContent()}
+        </div>
+
+        {/* Demo Section - Remove this after testing */}
+        <div className="mt-40">
+          <RecommendationDemo />
         </div>
       </main>
     </div>
