@@ -101,7 +101,7 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
   // Generate subject line based on priority and client name
   const generateSubjectLine = () => {
     const priorityPrefix = template.priority && template.priority !== 'Low' ? 
-      `[${template.priority}] ` : '';
+      `[${template.priority} Priority] ` : '';
     const clientName = template.clientName || 'Client';
     return `${priorityPrefix}Request for Recommendation – ${clientName}`;
   };
@@ -267,8 +267,8 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
             <span className="text-14 text-gray-600 font-medium w-email-label flex-shrink-0">Cc:</span>
             <div className="flex-1 ml-24">
               <Input
-                type="text"
-                placeholder="Enter email addresses (comma-separated)"
+            type="text"
+            placeholder="Enter email addresses (comma-separated)"
                 value={ccRecipients}
                 onChange={(e) => setCcRecipients(e.target.value)}
                 className="w-full"
@@ -367,15 +367,22 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                       )}
 
                       {template.priority && (
-                        <div className="grid grid-cols-3 gap-12">
+                        <div className="grid grid-cols-3 gap-12 items-start">
                           <span className="font-medium" style={{ color: '#6B7280' }}>Priority:</span>
-                          <span className={`inline-flex items-center gap-4 px-8 py-4 rounded-full text-12 font-medium border ${priorityColors[template.priority]} col-span-2 w-fit`}>
-                            {(() => {
-                              const IconComponent = priorityIcons[template.priority];
-                              return <IconComponent size={12} />;
-                            })()}
-                            {priorityLabels[template.priority]}
-                          </span>
+                          <div className="col-span-2">
+                            <div className="flex items-center gap-8">
+                              {(() => {
+                                const IconComponent = priorityIcons[template.priority];
+                                const iconColor = template.priority === 'Urgent' ? 'text-red-600' : 
+                                                 template.priority === 'High' ? 'text-orange-600' : 
+                                                 template.priority === 'Medium' ? 'text-yellow-600' : 'text-gray-600';
+                                return <IconComponent size={16} className={iconColor} />;
+                              })()}
+                              <span className="text-14" style={{ color: '#374151' }}>
+                                {priorityLabels[template.priority]}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -391,9 +398,21 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-20">
                       {/* CPC Bid */}
                       <div className="space-y-8">
-                        <label className="block text-12 font-medium" style={{ color: '#3D4759' }}>
-                          Current CPC Bid
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="block text-12 font-medium" style={{ color: '#3D4759' }}>
+                            Current CPC Bid
+                          </label>
+                          {cpcBid && (
+                            <button
+                              type="button"
+                              onClick={() => clearField('cpcBid')}
+                              className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
+                              style={{ color: '#303F9F' }}
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
                         <div className="relative">
                           <Input
                             type="text"
@@ -406,22 +425,26 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                           <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
                             $
                           </span>
-                          {cpcBid && (
-                            <button
-                              onClick={() => clearField('cpcBid')}
-                              className="absolute right-12 top-1/2 transform -translate-y-1/2 text-red-600 hover:text-red-800"
-                            >
-                              <X size={16} />
-                            </button>
-                          )}
                         </div>
                       </div>
 
                       {/* CPA Goal */}
                       <div className="space-y-8">
-                        <label className="block text-12 font-medium" style={{ color: '#3D4759' }}>
-                          Current CPA Goal
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="block text-12 font-medium" style={{ color: '#3D4759' }}>
+                            Current CPA Goal
+                          </label>
+                          {cpaGoal && (
+                            <button
+                              type="button"
+                              onClick={() => clearField('cpaGoal')}
+                              className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
+                              style={{ color: '#303F9F' }}
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
                         <div className="relative">
                           <Input
                             type="text"
@@ -434,22 +457,26 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                           <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
                             $
                           </span>
-                          {cpaGoal && (
-                            <button
-                              onClick={() => clearField('cpaGoal')}
-                              className="absolute right-12 top-1/2 transform -translate-y-1/2 text-red-600 hover:text-red-800"
-                            >
-                              <X size={16} />
-                            </button>
-                          )}
                         </div>
                       </div>
 
                       {/* Budget */}
                       <div className="space-y-8">
-                        <label className="block text-12 font-medium" style={{ color: '#3D4759' }}>
-                          <span className="text-red-500">*</span> Current Budget
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="block text-12 font-medium" style={{ color: '#3D4759' }}>
+                            <span className="text-red-500">*</span> Current Budget
+                          </label>
+                          {budget && (
+                            <button
+                              type="button"
+                              onClick={() => clearField('budget')}
+                              className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
+                              style={{ color: '#303F9F' }}
+                            >
+                              Clear
+                            </button>
+            )}
+          </div>
                         <div className="relative">
                           <Input
                             type="text"
@@ -462,14 +489,6 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                           <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
                             $
                           </span>
-                          {budget && (
-                            <button
-                              onClick={() => clearField('budget')}
-                              className="absolute right-12 top-1/2 transform -translate-y-1/2 text-red-600 hover:text-red-800"
-                            >
-                              <X size={16} />
-                            </button>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -559,9 +578,35 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
           </div>
 
           {/* Email Footer */}
-          <div style={{ backgroundColor: '#303F9F' }} className="px-32 py-12">
-            <p className="text-10 text-white text-center">
-              © 2023 Joveo.com | Terms of Service | Privacy Policy
+          <div style={{ backgroundColor: '#303F9F' }} className="p-16 text-center">
+            <p className="text-12 text-white">
+              © 2025{' '}
+              <a 
+                href="https://www.joveo.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-white hover:underline"
+              >
+                Joveo.com
+              </a>
+              {' | '}
+              <a 
+                href="https://www.joveo.com/terms-of-use/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-white hover:underline"
+              >
+                Terms of Service
+              </a>
+              {' | '}
+              <a 
+                href="https://www.joveo.com/privacy-policy/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-white hover:underline"
+              >
+                Privacy Policy
+              </a>
             </p>
           </div>
         </div>

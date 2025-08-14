@@ -1,10 +1,108 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Check, X, Plus, Minus, Send, Calendar as CalendarIcon, AlertTriangle, AlertCircle, Clock } from 'lucide-react';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { Textarea } from '../common/Textarea';
-import { Send, X, Plus, Minus, Check } from 'lucide-react';
-import { EmailTemplate } from '../../types';
+import { Dropdown } from '../common/Dropdown';
+import { EmailTemplate, Priority } from '../../types';
 import { useApp } from '../../context/AppContext';
+
+const priorityOptions: { value: Priority; label: string; icon: React.ComponentType<any>; color: string }[] = [
+  { value: 'Urgent', label: 'Urgent / Critical — Immediate attention', icon: AlertTriangle, color: 'text-red-600' },
+  { value: 'High', label: 'High — Action within 2 business days', icon: AlertCircle, color: 'text-orange-500' },
+  { value: 'Medium', label: 'Medium — Action within 3–5 business days', icon: Clock, color: 'text-yellow-500' },
+  { value: 'Low', label: 'Low — Action within 7 days (as bandwidth allows)', icon: Minus, color: 'text-gray-500' },
+];
+
+// Priority Dropdown Component with Icons (no search)
+const PriorityDropdown: React.FC<{
+  options: { value: Priority; label: string; icon: React.ComponentType<any>; color: string }[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}> = ({ options, value, onChange, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const selectedOption = options.find(opt => opt.value === value);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className={`
+          relative w-full pl-16 pr-40 py-10 text-sm border bg-white rounded-lg cursor-pointer transition-all duration-200
+          ${isOpen 
+            ? 'border-primary-500 ring-2 ring-primary-500 ring-opacity-20' 
+            : 'border-neutral-300 hover:border-neutral-400'
+          }
+        `}
+      >
+        <div className="flex items-center gap-8">
+          {selectedOption && (
+            <selectedOption.icon size={16} className={selectedOption.color} />
+          )}
+          <span className={`block truncate ${selectedOption ? 'text-neutral-900' : 'text-neutral-500'}`}>
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+        </div>
+        <div className="absolute inset-y-0 right-12 flex items-center pointer-events-none">
+          <svg 
+            className={`w-16 h-16 text-neutral-400 transition-transform duration-200 ${
+              isOpen ? 'transform rotate-180' : ''
+            }`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+      
+      {isOpen && (
+        <div className="absolute z-50 w-full bg-white border border-neutral-200 rounded-lg shadow-xl max-h-240 overflow-hidden top-full mt-4">
+          {options.map((option) => (
+            <div
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className={`
+                flex items-center justify-between px-16 py-10 text-sm cursor-pointer transition-colors
+                ${option.value === value
+                  ? 'bg-primary-50 text-primary-700'
+                  : 'text-neutral-900 hover:bg-neutral-50'
+                }
+              `}
+            >
+              <div className="flex items-center gap-8">
+                <option.icon size={16} className={option.color} />
+                <span className="truncate">{option.label}</span>
+              </div>
+              {option.value === value && (
+                <svg className="w-16 h-16 text-primary-600 flex-shrink-0 ml-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface EmailViewProps {
   template: EmailTemplate & {
@@ -256,7 +354,7 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                 <span className="text-red-500 mr-4">*</span>Subject:
               </label>
               <Input
-                value={`New ${isClient ? 'Client' : template.entityType} Onboarding - ${template.entityName} - Request for Feed Indexing & Goal Validation`}
+                value={`${(priority && priority !== 'Low') ? `[${priority} Priority] ` : ''}New ${isClient ? 'Client' : template.entityType} Onboarding - ${template.entityName} - Request for Feed Indexing & Goal Validation`}
                 className="bg-gray-50"
                 readOnly
               />
@@ -318,6 +416,7 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
               </div>
             </div>
 
+            {/* Optional Fields */}
             <div className="grid grid-cols-2 gap-16 mb-16">
               <div className="space-y-8">
                 <div className="flex items-center justify-between">
@@ -338,7 +437,7 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                 <div className="relative">
                   <Input
                     placeholder="Enter budget value"
-                    value={budget}
+                  value={budget}
                     onChange={(e) => setBudget(e.target.value)}
                     style={{ paddingLeft: '45px !important' }}
                     className="!pl-45"
@@ -373,73 +472,73 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
             </div>
 
             {/* Optional Fields */}
-            <div className="mt-24">
-              <h4 className="text-sm font-medium text-dark-grey mb-12">Optional Fields</h4>
-              
-              {/* Go Live Date */}
-              <div className="grid grid-cols-2 gap-16 mb-16">
-                <div className="space-y-8">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-14 font-semibold text-dark-grey">
-                      CPC Bid
-                    </label>
-                    {cpcBid && (
-                      <button
-                        type="button"
-                        onClick={() => setCpcBid('')}
-                        className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
-                        style={{ color: '#303F9F' }}
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Input
-                      placeholder="Enter CPC bid value"
-                      value={cpcBid}
-                      onChange={(e) => setCpcBid(e.target.value)}
-                      style={{ paddingLeft: '45px !important' }}
-                      className="!pl-45"
-                    />
-                    <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
-                      $
-                    </span>
-                  </div>
+            <div className="grid grid-cols-2 gap-16 mb-16">
+              <div className="space-y-8">
+                <div className="flex items-center justify-between">
+                  <label className="block text-14 font-semibold text-dark-grey">
+                    CPC Bid
+                  </label>
+                  {cpcBid && (
+                    <button
+                      type="button"
+                      onClick={() => setCpcBid('')}
+                      className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
+                      style={{ color: '#303F9F' }}
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
-
-                <div className="space-y-8">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-14 font-semibold text-dark-grey">
-                      CPA Goal
-                    </label>
-                    {cpaGoal && (
-                      <button
-                        type="button"
-                        onClick={() => setCpaGoal('')}
-                        className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
-                        style={{ color: '#303F9F' }}
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Input
-                      placeholder="Enter CPA goal value"
-                      value={cpaGoal}
-                      onChange={(e) => setCpaGoal(e.target.value)}
-                      style={{ paddingLeft: '45px !important' }}
-                      className="!pl-45"
-                    />
-                    <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
-                      $
-                    </span>
-                  </div>
+                <div className="relative">
+                  <Input
+                    placeholder="Enter CPC bid value"
+                    value={cpcBid}
+                    onChange={(e) => setCpcBid(e.target.value)}
+                    style={{ paddingLeft: '45px !important' }}
+                    className="!pl-45"
+                  />
+                  <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
+                    $
+                  </span>
                 </div>
               </div>
 
-              {/* Notes */}
+              <div className="space-y-8">
+                <div className="flex items-center justify-between">
+                  <label className="block text-14 font-semibold text-dark-grey">
+                    CPA Goal
+                  </label>
+                  {cpaGoal && (
+                    <button
+                      type="button"
+                      onClick={() => setCpaGoal('')}
+                      className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
+                      style={{ color: '#303F9F' }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Input
+                    placeholder="Enter CPA goal value"
+                    value={cpaGoal}
+                    onChange={(e) => setCpaGoal(e.target.value)}
+                    style={{ paddingLeft: '45px !important' }}
+                    className="!pl-45"
+                  />
+                  <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
+                    $
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Optional Fields */}
+            <div className="mt-24">
+              <h4 className="text-sm font-medium text-dark-grey mb-12">Optional & Additional Fields</h4>
+              
+              {/* Additional Notes */}
               <div className="flex items-center gap-8 mb-12">
                 <button
                   onClick={() => setShowNotes(!showNotes)}
@@ -456,8 +555,8 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
-                  />
-                </div>
+              />
+            </div>
               )}
 
               {/* Top Categories */}
@@ -494,10 +593,10 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                 <div className="mb-16">
                   <Input
                     placeholder="Enter top locations"
-                    value={locations}
-                    onChange={(e) => setLocations(e.target.value)}
-                  />
-                </div>
+                value={locations}
+                onChange={(e) => setLocations(e.target.value)}
+              />
+            </div>
               )}
 
               {/* Priority */}
@@ -512,18 +611,13 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
               </div>
               {showPriority && (
                 <div className="mb-16">
-                  <select
+                  <PriorityDropdown
+                    options={priorityOptions}
                     value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
-                    className="w-full px-12 py-8 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="">Select priority</option>
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                    <option value="Urgent">Urgent</option>
-                  </select>
-                </div>
+                    onChange={(value) => setPriority(value)}
+                    placeholder="Select priority"
+              />
+            </div>
               )}
             </div>
           </div>
@@ -669,16 +763,58 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                   </div>
 
                   {/* Additional Information - Separate Box if Needed */}
-                  {(showNotes && notes) && (
+                  {((showNotes && notes) || (showCategories && categories) || (showLocations && locations) || (showPriority && priority) || (showGoLive && goLiveDate)) && (
                     <div style={{ backgroundColor: '#FFFBEB' }} className="border border-amber-200 rounded-8 p-20">
                       <h3 className="text-16 font-semibold mb-16" style={{ color: '#374151' }}>
                         Additional Information
                       </h3>
                       <div className="space-y-12 text-14">
-                        <div>
-                          <span className="font-medium block mb-4" style={{ color: '#374151' }}>Notes:</span>
-                          <span className="text-14">{notes}</span>
-                        </div>
+                        {(showCategories && categories) && (
+                          <div>
+                            <span className="font-medium block mb-4" style={{ color: '#374151' }}>Top Categories:</span>
+                            <span className="text-14">{categories}</span>
+                          </div>
+                        )}
+                        
+                        {(showLocations && locations) && (
+                          <div>
+                            <span className="font-medium block mb-4" style={{ color: '#374151' }}>Top Locations:</span>
+                            <span className="text-14">{locations}</span>
+                          </div>
+                        )}
+                        
+                        {(showPriority && priority) && (
+                          <div>
+                            <span className="font-medium block mb-4" style={{ color: '#374151' }}>Priority Level:</span>
+                            <div className="flex items-center gap-8">
+                              {(() => {
+                                const selectedPriority = priorityOptions.find(opt => opt.value === priority);
+                                return selectedPriority ? (
+                                  <>
+                                    <selectedPriority.icon size={16} className={selectedPriority.color} />
+                                    <span className="text-14">{selectedPriority.label}</span>
+                                  </>
+                                ) : (
+                                  <span className="text-14">{priority}</span>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {(showGoLive && goLiveDate) && (
+                          <div>
+                            <span className="font-medium block mb-4" style={{ color: '#374151' }}>Go Live Date:</span>
+                            <span className="text-14">{goLiveDate}</span>
+                          </div>
+                        )}
+                        
+                        {(showNotes && notes) && (
+                          <div>
+                            <span className="font-medium block mb-4" style={{ color: '#374151' }}>Additional Notes:</span>
+                            <span className="text-14">{notes}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -702,7 +838,33 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
               {/* Email Footer */}
               <div style={{ backgroundColor: '#303F9F' }} className="p-16 text-center">
                 <p className="text-12 text-white">
-                  © 2023 Joveo.com | Terms of Service | Privacy Policy
+                  © 2025{' '}
+                  <a 
+                    href="https://www.joveo.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-white hover:underline"
+                  >
+                    Joveo.com
+                  </a>
+                  {' | '}
+                  <a 
+                    href="https://www.joveo.com/terms-of-use/" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-white hover:underline"
+                  >
+                    Terms of Service
+                  </a>
+                  {' | '}
+                  <a 
+                    href="https://www.joveo.com/privacy-policy/" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-white hover:underline"
+                  >
+                    Privacy Policy
+                  </a>
                 </p>
               </div>
             </div>

@@ -18,7 +18,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const showBadges = entitiesCount > 0 || recommendationsCount > 0;
 
   return (
-    <div className="w-248 min-h-screen bg-white border-r border-gray-200 pt-16">
+    <div className="w-248 h-full bg-white border-r border-gray-200 pt-16">
       <nav className="px-16 space-y-8">
         {/* Recommendations */}
         <button

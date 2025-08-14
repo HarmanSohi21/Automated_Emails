@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { RecommendationType, PublisherType } from '../../types';
-import { ChevronDown, X } from 'lucide-react';
+import { ChevronDown, X, Check } from 'lucide-react';
 
 interface MetricSelectorProps {
   publisherType: PublisherType;
@@ -50,8 +50,21 @@ export const MetricSelector: React.FC<MetricSelectorProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const rules = PUBLISHER_METRIC_RULES[publisherType];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     validateSelection();
@@ -99,16 +112,20 @@ export const MetricSelector: React.FC<MetricSelectorProps> = ({
     onMetricsChange(newMetrics);
   };
 
+  const handleToggle = () => {
+    setIsOpen(!isOpen);
+  };
+
   const getDisplayContent = () => {
     if (selectedMetrics.length === 0) {
       return (
-        <span className="text-14 text-gray-500">Selected metrics will be mandatory</span>
+        <span className="text-14 text-neutral-500">Selected metrics will be mandatory</span>
       );
     }
     
     return (
       <div className="flex flex-wrap gap-6">
-        {selectedMetrics.map(metric => (
+        {selectedMetrics.map((metric) => (
           <div
             key={metric}
             className="inline-flex items-center gap-2 px-12 py-2 rounded-full text-12 font-medium"
@@ -134,9 +151,9 @@ export const MetricSelector: React.FC<MetricSelectorProps> = ({
   return (
     <div className="space-y-8">
       {/* Input Field with Chips */}
-      <div className="relative">
+      <div className="relative" ref={dropdownRef}>
         <div
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={handleToggle}
           className={`
             relative w-full pl-16 pr-40 py-10 text-sm border bg-white rounded-lg cursor-pointer transition-all duration-200
             ${isOpen 
@@ -145,9 +162,8 @@ export const MetricSelector: React.FC<MetricSelectorProps> = ({
             }
           `}
         >
-          <div className="flex-1">
-            {getDisplayContent()}
-          </div>
+          {getDisplayContent()}
+          
           <div className="absolute inset-y-0 right-12 flex items-center pointer-events-none">
             <ChevronDown 
               className={`w-16 h-16 text-neutral-400 transition-transform duration-200 ${
@@ -160,51 +176,48 @@ export const MetricSelector: React.FC<MetricSelectorProps> = ({
         {/* Dropdown Menu */}
         {isOpen && (
           <div className="absolute z-50 w-full bg-white border border-neutral-200 rounded-lg shadow-xl max-h-240 overflow-hidden top-full mt-4">
-            {/* Metric Options - No Header */}
-            <div className="py-4">
+            {/* Metric Options */}
+            <div className="max-h-160 overflow-y-auto">
               {rules.allowedMetrics.map(metric => {
                 const isSelected = selectedMetrics.includes(metric);
                 
                 return (
-                  <label 
-                    key={metric} 
-                    className="flex items-center gap-8 px-8 py-8 hover:bg-gray-50 cursor-pointer transition-colors"
+                  <div
+                    key={metric}
+                    onClick={() => handleMetricToggle(metric)}
+                    className={`
+                      flex items-center justify-between px-16 py-10 text-sm cursor-pointer transition-colors
+                      ${isSelected
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-neutral-900 hover:bg-neutral-50'
+                      }
+                    `}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleMetricToggle(metric)}
-                      className="h-16 w-16 rounded-4 border-gray-300 focus:ring-2 focus:ring-offset-2"
-                      style={{ accentColor: '#303F9F' }}
-                    />
-                    <span className="text-14 text-gray-900">{metric}</span>
-                    {isSelected && (
-                      <span className="ml-auto text-xs font-medium px-6 py-2 rounded-full bg-red-100 text-red-700">
-                        Mandatory
-                      </span>
-                    )}
-                  </label>
+                    <div className="flex items-center gap-8">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {}} // Handled by parent div onClick
+                        className="h-16 w-16 rounded-4 border-gray-300 focus:ring-2 focus:ring-offset-2 pointer-events-none"
+                        style={{ accentColor: '#303F9F' }}
+                      />
+                      <span className="truncate">{metric}</span>
+                    </div>
+                    <div className="flex items-center gap-8">
+                      {isSelected && (
+                        <span className="text-xs font-medium px-6 py-2 rounded-full bg-red-100 text-red-700">
+                          Mandatory
+                        </span>
+                      )}
+                      {isSelected && (
+                        <Check className="w-16 h-16 text-primary-600 flex-shrink-0" />
+                      )}
+                    </div>
+                  </div>
                 );
               })}
-              
-              {/* Apply Button */}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="w-full text-center text-14 font-semibold py-10 px-8 rounded-8 transition-colors"
-                style={{ backgroundColor: '#303F9F', color: 'white' }}
-              >
-                Done
-              </button>
             </div>
           </div>
-        )}
-
-        {/* Click outside to close */}
-        {isOpen && (
-          <div 
-            className="fixed inset-0 z-10" 
-            onClick={() => setIsOpen(false)}
-          />
         )}
       </div>
     </div>

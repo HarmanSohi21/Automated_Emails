@@ -203,30 +203,33 @@ export const RequestRecommendationForm: React.FC = () => {
   const selectedClients = getSelectedClients();
   const currentClient = selectedClients[0] || clients[0];
   
-  const [formData, setFormData] = useState({
+  // Form data state
+  const [formData, setFormData] = useState<{
+    recommendationLevel: 'Client' | 'Campaign' | 'JobGroup' | '';
+    client: string;
+    campaign: string;
+    jobGroup: string;
+    publisherType: PublisherType | '';
+    publishers: string[];
+    metrics: string[];
+    duration: 'This Month' | 'Next Month' | '';
+    notes: string;
+    priority: string;
+  }>({
     recommendationLevel: '',
     client: '',
     campaign: '',
     jobGroup: '',
     publisherType: '',
-    publishers: [] as string[],
-    metrics: [] as RecommendationType[],
+    publishers: [],
+    metrics: [],
     duration: '',
     notes: '',
     priority: ''
   });
 
-  // Editable metrics state
-  const [editableMetrics, setEditableMetrics] = useState({
-    budget: '',
-    cpcBid: '',
-    cpaGoal: ''
-  });
-
-  const [isMetricSelectionValid, setIsMetricSelectionValid] = useState(false);
-  const [metricValidationErrors, setMetricValidationErrors] = useState<string[]>([]);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Validation states
+  const [isValid, setIsValid] = useState(false);
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [hasPreviewedAll, setHasPreviewedAll] = useState(false);
@@ -271,23 +274,6 @@ export const RequestRecommendationForm: React.FC = () => {
     }
   }, [formData.recommendationLevel, formData.client, formData.campaign, formData.jobGroup, selectedClients]);
 
-  // Initialize editable metrics when entityMetrics changes
-  useEffect(() => {
-    if (entityMetrics) {
-      setEditableMetrics({
-        budget: entityMetrics.budget.toString(),
-        cpcBid: entityMetrics.cpcBid.toString(),
-        cpaGoal: entityMetrics.cpaGoal.toString()
-      });
-    } else {
-      setEditableMetrics({
-        budget: '',
-        cpcBid: '',
-        cpaGoal: ''
-      });
-    }
-  }, [entityMetrics]);
-
   // Reset hasPreviewedAll when form changes
   useEffect(() => {
     setHasPreviewedAll(false);
@@ -302,24 +288,24 @@ export const RequestRecommendationForm: React.FC = () => {
   }, {} as Record<PublisherType, Publisher[]>);
 
   const handleMetricsChange = (metrics: RecommendationType[]) => {
-    setIsMetricSelectionValid(metrics.length > 0);
-    setFormData(prev => ({
-      ...prev,
+    setIsValid(metrics.length > 0);
+      setFormData(prev => ({
+        ...prev,
       metrics: metrics
-    }));
+      }));
   };
 
   const handlePublisherTypeChange = (type: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       publisherType: type as PublisherType,
       publishers: [] // Reset publishers when type changes
     }));
   };
 
   const handleRecommendationLevelChange = (value: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       recommendationLevel: value as 'Client' | 'Campaign' | 'JobGroup',
       campaign: '', // Reset when level changes
       jobGroup: '' // Reset when level changes
@@ -327,8 +313,7 @@ export const RequestRecommendationForm: React.FC = () => {
   };
 
   const handleMetricValidationChange = (isValid: boolean, errors: string[]) => {
-    setIsMetricSelectionValid(isValid);
-    setMetricValidationErrors(errors);
+    setIsValid(isValid);
   };
 
   // Check if all mandatory fields are filled
@@ -339,7 +324,7 @@ export const RequestRecommendationForm: React.FC = () => {
     const hasJobGroup = formData.recommendationLevel !== 'JobGroup' || !!formData.jobGroup;
     const hasPublisherType = !!formData.publisherType;
     const hasPublishers = formData.publishers.length > 0;
-    const hasValidMetrics = isMetricSelectionValid;
+    const hasValidMetrics = isValid;
     const hasDuration = !!formData.duration;
 
     return hasRecommendationLevel && hasClient && hasCampaign && hasJobGroup && 
@@ -356,11 +341,13 @@ export const RequestRecommendationForm: React.FC = () => {
 
   const handleConfirmSendAll = async () => {
     setShowWarningModal(false);
-    setError(null);
+    // setError(null); // Removed error state
 
     try {
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      // setSuccess(true); // Removed success state
+      setTimeout(() => {
+        // setSuccess(false); // Removed success state
+      }, 3000);
 
               // Reset form
       setFormData({
@@ -377,7 +364,7 @@ export const RequestRecommendationForm: React.FC = () => {
       });
       setHasPreviewedAll(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      // setError(err instanceof Error ? err.message : 'An unknown error occurred'); // Removed error state
     }
   };
 
@@ -474,18 +461,18 @@ export const RequestRecommendationForm: React.FC = () => {
   const getAllPublisherMetrics = () => {
     if (!entityMetrics || formData.publishers.length === 0) {
       const defaultMetrics = {
-        budget: editableMetrics.budget ? parseFloat(editableMetrics.budget) : 0,
-        cpcBid: editableMetrics.cpcBid ? parseFloat(editableMetrics.cpcBid) : 0,
-        cpaGoal: editableMetrics.cpaGoal ? parseFloat(editableMetrics.cpaGoal) : 0
+        budget: 0,
+        cpcBid: 0,
+        cpaGoal: 0
       };
       return [defaultMetrics];
     }
 
     // Use entity metrics (either original or user-edited)
     const currentEntityMetrics = {
-      budget: editableMetrics.budget ? parseFloat(editableMetrics.budget) : entityMetrics.budget,
-      cpcBid: editableMetrics.cpcBid ? parseFloat(editableMetrics.cpcBid) : entityMetrics.cpcBid,
-      cpaGoal: editableMetrics.cpaGoal ? parseFloat(editableMetrics.cpaGoal) : entityMetrics.cpaGoal
+      budget: entityMetrics.budget,
+      cpcBid: entityMetrics.cpcBid,
+      cpaGoal: entityMetrics.cpaGoal
     };
 
     // Generate metrics for each publisher
@@ -499,9 +486,9 @@ export const RequestRecommendationForm: React.FC = () => {
     if (!entityMetrics || formData.publishers.length === 0) return;
 
     const currentEntityMetrics = {
-      budget: editableMetrics.budget ? parseFloat(editableMetrics.budget) : entityMetrics.budget,
-      cpcBid: editableMetrics.cpcBid ? parseFloat(editableMetrics.cpcBid) : entityMetrics.cpcBid,
-      cpaGoal: editableMetrics.cpaGoal ? parseFloat(editableMetrics.cpaGoal) : entityMetrics.cpaGoal
+      budget: entityMetrics.budget,
+      cpcBid: entityMetrics.cpcBid,
+      cpaGoal: entityMetrics.cpaGoal
     };
 
     console.log('=== Publisher Allocation Debug ===');
@@ -537,27 +524,7 @@ export const RequestRecommendationForm: React.FC = () => {
         </p>
       </div>
 
-      {success && (
-        <div className="mb-16 p-12 bg-green-50 text-green-700 rounded-6 border border-green-200">
-          <div className="flex items-center gap-8">
-            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center">
-              <X size={12} className="text-white" />
-            </div>
-            <span className="text-14 font-medium">Recommendation request sent successfully!</span>
-          </div>
-        </div>
-      )}
-      
-      {error && (
-        <div className="mb-16 p-12 bg-red-50 text-red-700 rounded-6 border border-red-200">
-          <div className="flex items-center gap-8">
-            <div className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center">
-              <X size={12} className="text-white" />
-            </div>
-            <span className="text-14 font-medium">{error}</span>
-          </div>
-        </div>
-      )}
+      {/* Removed success and error messages as they are no longer managed */}
 
       <div className="space-y-32">
         {/* 1. Recommendation Level - Mandatory */}
@@ -616,7 +583,7 @@ export const RequestRecommendationForm: React.FC = () => {
             <label className="block text-14 font-semibold text-dark-grey">
               <span className="text-red-500">*</span> Job Group
             </label>
-            <Dropdown
+        <Dropdown
               options={jobGroupOptions}
               value={formData.jobGroup}
               onChange={(value) => setFormData(prev => ({ ...prev, jobGroup: value }))}
@@ -625,105 +592,51 @@ export const RequestRecommendationForm: React.FC = () => {
           </div>
         )}
 
-        {/* Entity Metrics Display - Now Editable */}
+        {/* Entity Metrics Display - Static Information */}
         {entityMetrics && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-16 rounded-8 border border-blue-200">
             <h3 className="text-14 font-semibold text-dark-grey mb-12" style={{ color: '#303F9F' }}>
               {formData.recommendationLevel} Metrics
             </h3>
             
-            {/* Horizontal Layout for Input Fields */}
+            {/* Horizontal Layout for Static Display */}
             <div className="grid grid-cols-3 gap-16">
               {/* Budget */}
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                  <label className="block text-14 font-semibold text-dark-grey">
-                    <span className="text-red-500 mr-4">*</span>Budget
-                  </label>
-                  {editableMetrics.budget && (
-                    <button
-                      type="button"
-                      onClick={() => setEditableMetrics(prev => ({ ...prev, budget: '' }))}
-                      className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
-                      style={{ color: '#303F9F' }}
-                    >
-                      Clear
-                    </button>
-                  )}
+              <div className="bg-white p-16 rounded-8 shadow-sm border border-gray-100">
+                <div className="flex items-center gap-8 mb-8">
+                  <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center">
+                    <DollarSign size={16} className="text-green-600" />
+                  </div>
+                  <span className="text-12 font-medium text-gray-600">Budget</span>
                 </div>
-                <div className="relative">
-                  <Input
-                    placeholder="Enter budget value"
-                    value={editableMetrics.budget}
-                    onChange={(e) => setEditableMetrics(prev => ({ ...prev, budget: e.target.value }))}
-                    style={{ paddingLeft: '45px !important' }}
-                    className="!pl-45"
-                  />
-                  <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
-                    $
-                  </span>
+                <div className="text-18 font-semibold text-gray-900">
+                  ${entityMetrics.budget.toLocaleString()}
                 </div>
               </div>
 
               {/* CPC Bid */}
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                  <label className="block text-14 font-semibold text-dark-grey">
-                    CPC Bid
-                  </label>
-                  {editableMetrics.cpcBid && (
-                    <button
-                      type="button"
-                      onClick={() => setEditableMetrics(prev => ({ ...prev, cpcBid: '' }))}
-                      className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
-                      style={{ color: '#303F9F' }}
-                    >
-                      Clear
-                    </button>
-                  )}
+              <div className="bg-white p-16 rounded-8 shadow-sm border border-gray-100">
+                <div className="flex items-center gap-8 mb-8">
+                  <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Target size={16} className="text-blue-600" />
+                  </div>
+                  <span className="text-12 font-medium text-gray-600">CPC Bid</span>
                 </div>
-                <div className="relative">
-                  <Input
-                    placeholder="Enter CPC bid value"
-                    value={editableMetrics.cpcBid}
-                    onChange={(e) => setEditableMetrics(prev => ({ ...prev, cpcBid: e.target.value }))}
-                    style={{ paddingLeft: '45px !important' }}
-                    className="!pl-45"
-                  />
-                  <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
-                    $
-                  </span>
+                <div className="text-18 font-semibold text-gray-900">
+                  ${entityMetrics.cpcBid.toFixed(2)}
                 </div>
               </div>
 
               {/* CPA Goal */}
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                  <label className="block text-14 font-semibold text-dark-grey">
-                    CPA Goal
-                  </label>
-                  {editableMetrics.cpaGoal && (
-                    <button
-                      type="button"
-                      onClick={() => setEditableMetrics(prev => ({ ...prev, cpaGoal: '' }))}
-                      className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
-                      style={{ color: '#303F9F' }}
-                    >
-                      Clear
-                    </button>
-                  )}
+              <div className="bg-white p-16 rounded-8 shadow-sm border border-gray-100">
+                <div className="flex items-center gap-8 mb-8">
+                  <div className="w-32 h-32 bg-orange-100 rounded-full flex items-center justify-center">
+                    <Zap size={16} className="text-orange-600" />
+                  </div>
+                  <span className="text-12 font-medium text-gray-600">CPA Goal</span>
                 </div>
-                <div className="relative">
-                  <Input
-                    placeholder="Enter CPA goal value"
-                    value={editableMetrics.cpaGoal}
-                    onChange={(e) => setEditableMetrics(prev => ({ ...prev, cpaGoal: e.target.value }))}
-                    style={{ paddingLeft: '45px !important' }}
-                    className="!pl-45"
-                  />
-                  <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
-                    $
-                  </span>
+                <div className="text-18 font-semibold text-gray-900">
+                  ${entityMetrics.cpaGoal.toFixed(2)}
                 </div>
               </div>
             </div>

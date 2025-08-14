@@ -900,8 +900,22 @@
 /* Custom height utilities */
 .h-40 { height: 40px !important; }
 .h-48 { height: 48px !important; }
+.h-280 { height: 280px !important; }
+
+/* Custom max-height utilities */
+.max-h-160 { max-height: 160px !important; }
+.max-h-200 { max-height: 200px !important; }
+.max-h-240 { max-height: 240px !important; }
 
 /* Custom width utilities */
+.w-email-label { width: 128px !important; }
+.w-40 { width: 40px !important; }
+.w-248 { width: 248px !important; }
+
+/* Custom padding/margin utilities */
+.pt-64 { padding-top: 64px !important; }
+.pb-64 { padding-bottom: 64px !important; }
+.ml-248 { margin-left: 248px !important; }
 
 /* Footer specific styles */
 .text-footer {

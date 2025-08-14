@@ -24,22 +24,25 @@ export const MainLayout: React.FC = () => {
   const recommendationsCount = recommendations.filter(rec => rec.status === 'Pending').length;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="flex-shrink-0">
+    <div className="min-h-screen bg-gray-50">
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200">
         <Header />
       </div>
       
-      <div className="flex flex-1 min-h-0">
-        <div className="flex-shrink-0">
-          <Sidebar 
-            currentView={currentView} 
-            onViewChange={setCurrentView}
-            entitiesCount={entitiesCount}
-            recommendationsCount={recommendationsCount}
-          />
-        </div>
-        
-        <main className="flex-1 overflow-hidden">
+      {/* Fixed Sidebar */}
+      <div className="fixed left-0 top-64 bottom-0 z-20">
+        <Sidebar 
+          currentView={currentView} 
+          onViewChange={setCurrentView}
+          entitiesCount={entitiesCount}
+          recommendationsCount={recommendationsCount}
+        />
+      </div>
+      
+      {/* Main Content Area - Scrollable */}
+      <main className="ml-248 pt-64 min-h-screen">
+        <div>
           {!hasRequiredSelections ? (
             <EmptyState showSelectionPrompt={true} />
           ) : (
@@ -48,12 +51,11 @@ export const MainLayout: React.FC = () => {
               {currentView === 'entities' && <EmailNotificationList />}
             </>
           )}
-        </main>
-      </div>
-      
-      <div className="flex-shrink-0">
-        <Footer />
-      </div>
+          
+          {/* Footer within scrollable content */}
+          <Footer />
+        </div>
+      </main>
     </div>
   );
 }; 

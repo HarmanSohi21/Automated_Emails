@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ChevronDown, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ChevronDown, X, Check } from 'lucide-react';
 import { Publisher } from '../../types';
 
 interface PublisherSelectorProps {
@@ -14,6 +14,22 @@ export const PublisherSelector: React.FC<PublisherSelectorProps> = ({
   onPublishersChange
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setSearchTerm('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handlePublisherToggle = (publisherId: string) => {
     const newPublishers = selectedPublishers.includes(publisherId)
@@ -35,10 +51,25 @@ export const PublisherSelector: React.FC<PublisherSelectorProps> = ({
     }).filter(name => name);
   };
 
+  // Filter publishers based on search term
+  const filteredPublishers = publishers.filter(publisher =>
+    publisher.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleToggle = () => {
+    setIsOpen(!isOpen);
+    if (!isOpen) {
+      // Focus the search input when opening
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+    }
+  };
+
   const getDisplayContent = () => {
     if (selectedPublishers.length === 0) {
       return (
-        <span className="text-14 text-gray-500">Select publishers</span>
+        <span className="text-14 text-neutral-500">Select publishers</span>
       );
     }
     
@@ -71,9 +102,9 @@ export const PublisherSelector: React.FC<PublisherSelectorProps> = ({
   return (
     <div className="space-y-8">
       {/* Input Field with Chips */}
-      <div className="relative">
+      <div className="relative" ref={dropdownRef}>
         <div
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={handleToggle}
           className={`
             relative w-full pl-16 pr-40 py-10 text-sm border bg-white rounded-lg cursor-pointer transition-all duration-200
             ${isOpen 
@@ -82,9 +113,8 @@ export const PublisherSelector: React.FC<PublisherSelectorProps> = ({
             }
           `}
         >
-          <div className="flex-1">
-            {getDisplayContent()}
-          </div>
+          {getDisplayContent()}
+          
           <div className="absolute inset-y-0 right-12 flex items-center pointer-events-none">
             <ChevronDown 
               className={`w-16 h-16 text-neutral-400 transition-transform duration-200 ${
@@ -96,53 +126,60 @@ export const PublisherSelector: React.FC<PublisherSelectorProps> = ({
 
         {/* Dropdown Menu */}
         {isOpen && (
-          <div className="absolute z-50 w-full bg-white border border-neutral-200 rounded-lg shadow-xl max-h-240 overflow-y-auto top-full mt-4">
-            {/* Publisher Options */}
-            <div className="py-4">
-              {publishers.length === 0 ? (
-                <div className="px-8 py-12 text-14 text-gray-500 text-center">
-                  No publishers available for this type
+          <div className="absolute z-50 w-full bg-white border border-neutral-200 rounded-lg shadow-xl max-h-240 overflow-hidden top-full mt-4">
+            {/* Search Input */}
+            <div className="p-12 border-b border-neutral-100">
+              <input
+                ref={inputRef}
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search publishers..."
+                className="w-full px-12 py-8 text-sm border border-neutral-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              />
+            </div>
+
+            {/* Publisher List - Scrollable */}
+            <div className="max-h-160 overflow-y-auto">
+              {filteredPublishers.length === 0 ? (
+                <div className="px-16 py-12 text-sm text-neutral-500 text-center">
+                  {searchTerm ? 'No publishers found' : 'No publishers available for this type'}
                 </div>
               ) : (
-                publishers.map(publisher => {
+                filteredPublishers.map(publisher => {
                   const isSelected = selectedPublishers.includes(publisher.id);
                   
                   return (
-                    <label 
-                      key={publisher.id} 
-                      className="flex items-center gap-8 px-8 py-8 hover:bg-gray-50 cursor-pointer transition-colors"
+                    <div
+                      key={publisher.id}
+                      onClick={() => handlePublisherToggle(publisher.id)}
+                      className={`
+                        flex items-center justify-between px-16 py-10 text-sm cursor-pointer transition-colors
+                        ${isSelected
+                          ? 'bg-primary-50 text-primary-700'
+                          : 'text-neutral-900 hover:bg-neutral-50'
+                        }
+                      `}
                     >
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handlePublisherToggle(publisher.id)}
-                        className="h-16 w-16 rounded-4 border-gray-300 focus:ring-2 focus:ring-offset-2"
-                        style={{ accentColor: '#303F9F' }}
-                      />
-                      <span className="text-14 text-gray-900">{publisher.name}</span>
-                    </label>
+                      <div className="flex items-center gap-8">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {}} // Handled by parent div onClick
+                          className="h-16 w-16 rounded-4 border-gray-300 focus:ring-2 focus:ring-offset-2 pointer-events-none"
+                          style={{ accentColor: '#303F9F' }}
+                        />
+                        <span className="truncate">{publisher.name}</span>
+                      </div>
+                      {isSelected && (
+                        <Check className="w-16 h-16 text-primary-600 flex-shrink-0 ml-12" />
+                      )}
+                    </div>
                   );
                 })
               )}
-              
-              {/* Apply Button */}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="w-full text-center text-14 font-semibold py-10 px-8 rounded-8 transition-colors"
-                style={{ backgroundColor: '#303F9F', color: 'white' }}
-              >
-                Done
-              </button>
             </div>
           </div>
-        )}
-
-        {/* Click outside to close */}
-        {isOpen && (
-          <div 
-            className="fixed inset-0 z-10" 
-            onClick={() => setIsOpen(false)}
-          />
         )}
       </div>
     </div>
