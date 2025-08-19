@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Search, SlidersHorizontal, Plus, Check, X, ChevronDown, Send, Eye } from 'lucide-react';
+import { Mail, Search, SlidersHorizontal, Plus, Check, X, ChevronDown, Send, Eye, AlertCircle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Card } from '../common/Card';
 import { StatusBadge } from '../common/StatusBadge';
@@ -9,11 +9,39 @@ import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { EmailView } from './EmailView';
-import { Toast } from '../common/Toast';
 import { Input } from '../common/Input';
-import { Calendar } from '../common/Calendar';
 import { Dropdown } from '../common/Dropdown';
 import { EmailNotification, FilterChip } from '../../types';
+
+// Enhanced Toast Component (matching Recommendations design)
+const EnhancedToast: React.FC<{ message: string; type: 'success' | 'error'; onClose: () => void }> = ({ message, type, onClose }) => {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none" style={{ left: '248px' }}>
+      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 pointer-events-auto">
+        <div className={`flex items-center gap-12 px-12 py-8 rounded-4 shadow-lg border ${
+          type === 'success' 
+            ? 'bg-green-50 border-green-200 text-green-800' 
+            : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          <div className="w-20 h-20 flex items-center justify-center">
+            {type === 'success' ? (
+              <Check size={12} className="text-green-600" />
+            ) : (
+              <AlertCircle size={12} className="text-red-600" />
+            )}
+          </div>
+          <span className="text-12 font-normal">{message}</span>
+          <button
+            onClick={onClose}
+            className="w-20 h-20 flex items-center justify-center rounded-full hover:bg-white/50 transition-colors"
+          >
+            <X size={10} className="text-gray-600" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const EmailNotificationList: React.FC = () => {
   const { 
@@ -40,6 +68,7 @@ export const EmailNotificationList: React.FC = () => {
   });
   const [showAddFilter, setShowAddFilter] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState<string | null>(null);
+  const [editingFilterId, setEditingFilterId] = useState<string | null>(null);
   const [tempFilterSelections, setTempFilterSelections] = useState<{[key: string]: string[]}>({});
   const [searchFilters, setSearchFilters] = useState<{[key: string]: string}>({});
   const [selectedDate, setSelectedDate] = useState('');
@@ -56,10 +85,31 @@ export const EmailNotificationList: React.FC = () => {
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
   const [sendingEmails, setSendingEmails] = useState<Set<string>>(new Set());
 
+  // Check for failed emails and show notification
+  useEffect(() => {
+    const failedEmails = emailNotifications.filter(email => email.status === 'Failed');
+    const expiredEmails = emailNotifications.filter(email => 
+      email.status === 'Ready' && isEmailExpired(email)
+    );
+    
+    if (failedEmails.length > 0) {
+      setToastMessage(`Failed to send ${failedEmails.length} email${failedEmails.length > 1 ? 's' : ''}. Use "Try Again" button to send it.`);
+      setToastType('error');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    } else if (expiredEmails.length > 0) {
+      setToastMessage(`${expiredEmails.length} email${expiredEmails.length > 1 ? 's' : ''} expired (older than 7 days).`);
+      setToastType('error');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    }
+  }, [emailNotifications]);
+
   // Filter options
-  const publisherOptions = ['ZipRecruiter', 'Monster', 'Snagajob', 'Jooble', 'OnTimeHire', 'Banya', 'Indeed', 'LinkedIn', 'Glassdoor', 'CareerBuilder', 'FlexJobs', 'Dice', 'AngelList', 'SimplyHired', 'PeoplePerHour', 'ClearanceJobs', 'TheLadders', 'JobStreet', 'RemoteOK', 'Upwork'];
-  const statusOptions = ['Ready', 'Sent', 'Processing', 'Failed'];
+  const publisherOptions = ['ZipRecruiter', 'Monster', 'Snagajob', 'Indeed', 'LinkedIn', 'Glassdoor', 'CareerBuilder', 'AngelList'];
+  const statusOptions = ['Processing', 'Ready', 'Sent', 'Failed', 'Expired'];
   const entityTypeOptions = ['Client', 'Campaign', 'JobGroup'];
+  const dateOptions = ['Today', 'Yesterday', 'This week', 'Last week', 'This month', 'Last month', 'Last 30 days'];
 
   // Filter helper functions
   const getAvailableFilterTypes = () => {
@@ -109,7 +159,16 @@ export const EmailNotificationList: React.FC = () => {
   const handleAddFilter = (filterType: string) => {
     setShowAddFilter(false);
     setShowFilterDropdown(filterType);
+    setEditingFilterId(null);
     setTempFilterSelections({ ...tempFilterSelections, [filterType]: [] });
+  };
+
+  // Handle editing an existing filter
+  const handleEditFilter = (filter: FilterChip) => {
+    setShowFilterDropdown(filter.type);
+    setEditingFilterId(filter.id);
+    setTempFilterSelections({ ...tempFilterSelections, [filter.type]: filter.values });
+    setShowAddFilter(false);
   };
 
   const handleFilterSelection = (filterType: string, value: string, isMultiSelect: boolean = true) => {
@@ -138,15 +197,26 @@ export const EmailNotificationList: React.FC = () => {
     if (filterType === 'date') {
       if (selectedDate) {
         const displayText = createChipDisplayText('date', [selectedDate]);
-        const newFilter: FilterChip = {
-          id: `${filterType}-${Date.now()}`,
+        const filterData = {
           type: filterType,
           label: 'Created Date',
           values: [selectedDate],
           displayText
         };
-        
-        setAppliedFilters([...appliedFilters, newFilter]);
+
+        if (editingFilterId) {
+          // Update existing filter
+          setAppliedFilters(appliedFilters.map(f => 
+            f.id === editingFilterId ? { ...f, ...filterData } : f
+          ));
+        } else {
+          // Add new filter
+          const newFilter: FilterChip = {
+            id: `${filterType}-${Date.now()}`,
+            ...filterData
+          };
+          setAppliedFilters([...appliedFilters, newFilter]);
+        }
       }
     } else if (selections.length > 0) {
       const displayText = createChipDisplayText(filterType, selections);
@@ -154,18 +224,30 @@ export const EmailNotificationList: React.FC = () => {
                     filterType === 'client' ? 'Client name' :
                     filterType.charAt(0).toUpperCase() + filterType.slice(1);
       
-      const newFilter: FilterChip = {
-        id: `${filterType}-${Date.now()}`,
+      const filterData = {
         type: filterType,
         label,
         values: selections,
         displayText
       };
-      
-      setAppliedFilters([...appliedFilters, newFilter]);
+
+      if (editingFilterId) {
+        // Update existing filter
+        setAppliedFilters(appliedFilters.map(f => 
+          f.id === editingFilterId ? { ...f, ...filterData } : f
+        ));
+      } else {
+        // Add new filter
+        const newFilter: FilterChip = {
+          id: `${filterType}-${Date.now()}`,
+          ...filterData
+        };
+        setAppliedFilters([...appliedFilters, newFilter]);
+      }
     }
     
     setShowFilterDropdown(null);
+    setEditingFilterId(null);
     setTempFilterSelections({ ...tempFilterSelections, [filterType]: [] });
     setSelectedDate('');
   };
@@ -178,13 +260,28 @@ export const EmailNotificationList: React.FC = () => {
     setAppliedFilters([]);
   };
 
+  // Helper function to check if email is expired (> 7 days old)
+  const isEmailExpired = (email: EmailNotification): boolean => {
+    const createdDate = new Date(email.createdAt);
+    const now = new Date();
+    const daysDiff = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
+    return daysDiff > 7;
+  };
+
   // Filtering logic
   const getFilteredNotifications = () => {
-    let filtered = emailNotifications;
+    // First, update status for expired emails
+    let filtered = emailNotifications.map(email => {
+      // Only mark as expired if currently Ready and > 7 days old
+      if (email.status === 'Ready' && isEmailExpired(email)) {
+        return { ...email, status: 'Expired' as const };
+      }
+      return email;
+    });
 
     // Search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(email => {
         const matches = [
           email.entityName,
@@ -233,29 +330,78 @@ export const EmailNotificationList: React.FC = () => {
           if (filter.values.length > 0) {
             const dateValue = filter.values[0];
             const now = new Date();
+            let startDate: Date;
+            let endDate: Date;
             
-            if (dateValue === 'This week') {
-              const startOfWeek = new Date(now);
-              const day = now.getDay();
-              const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-              startOfWeek.setDate(diff);
-              startOfWeek.setHours(0, 0, 0, 0);
-              
-              const endOfWeek = new Date(startOfWeek);
-              endOfWeek.setDate(startOfWeek.getDate() + 6);
-              endOfWeek.setHours(23, 59, 59, 999);
-              
-              filtered = filtered.filter(email => {
-                const emailDate = new Date(email.createdAt);
-                return emailDate >= startOfWeek && emailDate <= endOfWeek;
-              });
-            } else {
-              const filterDate = new Date(dateValue);
-              filtered = filtered.filter(email => {
-                const emailDate = new Date(email.createdAt);
-                return emailDate.toDateString() === filterDate.toDateString();
-              });
+            switch (dateValue) {
+              case 'Today':
+                startDate = new Date(now);
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(now);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'Yesterday':
+                startDate = new Date(now);
+                startDate.setDate(now.getDate() - 1);
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(now);
+                endDate.setDate(now.getDate() - 1);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'This week':
+                startDate = new Date(now);
+                const day = now.getDay();
+                const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+                startDate.setDate(diff);
+                startDate.setHours(0, 0, 0, 0);
+                
+                endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 6);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'Last week':
+                startDate = new Date(now);
+                const lastWeekDay = now.getDay();
+                const lastWeekDiff = now.getDate() - lastWeekDay + (lastWeekDay === 0 ? -6 : 1) - 7;
+                startDate.setDate(lastWeekDiff);
+                startDate.setHours(0, 0, 0, 0);
+                
+                endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 6);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'This month':
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'Last month':
+                startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'Last 30 days':
+                startDate = new Date(now);
+                startDate.setDate(now.getDate() - 30);
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(now);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              default:
+                return;
             }
+            
+            filtered = filtered.filter(email => {
+              const emailDate = new Date(email.createdAt);
+              return emailDate >= startDate && emailDate <= endDate;
+            });
           }
           break;
       }
@@ -282,9 +428,9 @@ export const EmailNotificationList: React.FC = () => {
 
   const handleViewAll = () => {
     if (readyNotifications.length > 0) {
-      setCurrentEmailIndex(0);
+    setCurrentEmailIndex(0);
       setSelectedEmail(readyNotifications[0]);
-      setShowAllEmailsView(true);
+    setShowAllEmailsView(true);
     }
   };
 
@@ -297,13 +443,15 @@ export const EmailNotificationList: React.FC = () => {
       for (const email of notificationsToSend) {
         await handleSendEmail(email);
       }
-      setToastMessage(`Successfully sent ${notificationsToSend.length} emails`);
+      setToastMessage(`Successfully sent ${notificationsToSend.length} email${notificationsToSend.length > 1 ? 's' : ''}.`);
       setToastType('success');
       setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
     } catch (error) {
-      setToastMessage('Failed to send some emails');
+      setToastMessage('Failed to send some emails.');
       setToastType('error');
       setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
     }
   };
 
@@ -334,10 +482,40 @@ export const EmailNotificationList: React.FC = () => {
       setToastMessage('Email sent successfully!');
       setToastType('success');
       setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
     } catch (error) {
-      setToastMessage('Failed to send email');
+      setToastMessage('Failed to send email. Use "Try Again" button to send it.');
       setToastType('error');
       setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    } finally {
+      setSendingEmails(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(email.id);
+        return newSet;
+      });
+    }
+  };
+
+  // Handle retry for failed emails
+  const handleRetryEmail = async (email: EmailNotification) => {
+    setSendingEmails(prev => new Set(prev).add(email.id));
+    try {
+      await sendEmail({
+        entityId: email.entityId,
+        recipients: email.recipients,
+        subject: email.subject,
+        body: 'Email notification body'
+      });
+      setToastMessage('Email sent successfully!');
+      setToastType('success');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    } catch (error) {
+      setToastMessage('Failed to send email again. Please try again later.');
+      setToastType('error');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
     } finally {
       setSendingEmails(prev => {
         const newSet = new Set(prev);
@@ -352,25 +530,51 @@ export const EmailNotificationList: React.FC = () => {
     // Special handling for date filter
     if (filterType === 'date') {
       return (
-        <div className="fixed bg-white border border-gray-200 rounded-16 shadow-2xl z-50" style={{
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          maxHeight: '90vh',
-          maxWidth: '90vw'
-        }}>
-          <div className="overflow-y-auto max-h-full p-4">
-            <Calendar
-              selectedDate={selectedDate}
-              onDateSelect={(date: string) => setSelectedDate(date)}
-              condition={dateCondition}
-              onConditionChange={setDateCondition}
-              onCancel={() => {
-                setShowFilterDropdown(null);
-                setSelectedDate('');
-              }}
-              onApply={() => applyFilter('date')}
-            />
+        <div className="w-full bg-white border border-gray-200 rounded-12 shadow-xl overflow-hidden">
+          <div className="p-16">
+            <h4 className="text-14 font-semibold text-gray-900 mb-12">Select Date Range</h4>
+            
+            <div className="space-y-8">
+              {dateOptions.map((option) => (
+                <div key={option} className="flex items-center">
+                  <input
+                    type="radio"
+                    id={`date-${option}`}
+                    name="dateRange"
+                    value={option}
+                    checked={selectedDate === option}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedDate(option);
+                      }
+                    }}
+                    className="h-16 w-16 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor={`date-${option}`} className="ml-8 text-14 text-gray-700 cursor-pointer">
+                    {option}
+                  </label>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex justify-end gap-8 mt-16 pt-16 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setShowFilterDropdown(null);
+                  setSelectedDate('');
+                }}
+                className="px-16 py-8 text-14 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => applyFilter('date')}
+                disabled={selectedDate === ''}
+                className="px-16 py-8 bg-primary-600 text-white text-14 rounded-6 hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Apply
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -409,11 +613,8 @@ export const EmailNotificationList: React.FC = () => {
         break;
     }
 
-    return (
-      <div className="fixed w-360 bg-white border border-gray-200 rounded-12 shadow-xl overflow-hidden z-50" style={{
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
+  return (
+      <div className="w-full bg-white border border-gray-200 rounded-12 shadow-xl overflow-hidden" style={{
         maxHeight: '80vh'
       }}>
         {hasSearch && (
@@ -483,14 +684,14 @@ export const EmailNotificationList: React.FC = () => {
       <div className="flex items-center gap-12 mb-20">
         <div className="flex items-center justify-center w-40 h-40 bg-indigo-100 rounded-8">
           <Mail size={20} className="text-indigo-600" />
-        </div>
-        <div>
+            </div>
+            <div>
           <h1 className="text-18 font-semibold text-gray-900">New Entity Notification</h1>
           <p className="text-14 text-gray-600 mt-2">
             Manage and track email notifications sent to publishers for newly setup entities in MOJO.
-          </p>
-        </div>
-      </div>
+              </p>
+            </div>
+          </div>
 
       {/* Bulk Actions Banner */}
       {showBanner && (
@@ -524,28 +725,28 @@ export const EmailNotificationList: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-8">
-              <Button
+            <Button
                 variant="secondary"
-                onClick={handleViewAll}
+              onClick={handleViewAll}
                 className="px-12 py-6 text-12"
-              >
+            >
                 <Eye size={14} />
                 Preview All
-              </Button>
-              <Button
-                onClick={handleSendAllReady}
+            </Button>
+            <Button
+              onClick={handleSendAllReady}
                 disabled={sendingEmails.size > 0}
                 className="px-12 py-6 text-12"
-              >
+            >
                 {sendingEmails.size > 0 ? (
                   <LoadingSpinner size="sm" />
                 ) : (
                   <>
                     <Send size={14} />
-                    Send All
+              Send All
                   </>
                 )}
-              </Button>
+            </Button>
             </div>
           </div>
         </div>
@@ -589,16 +790,39 @@ export const EmailNotificationList: React.FC = () => {
             {appliedFilters.map((filter) => (
               <div
                 key={filter.id}
-                className="inline-flex items-center gap-6 px-10 py-6 bg-white border border-gray-200 rounded-6 shadow-sm hover:shadow-md transition-shadow"
+                className="relative inline-flex items-center gap-6 px-10 py-6 bg-white border border-gray-200 rounded-6 shadow-sm hover:shadow-md transition-shadow"
                 title={filter.displayText}
               >
-                <span className="text-12 text-gray-700">{filter.displayText}</span>
+                <button
+                  onClick={() => handleEditFilter(filter)}
+                  className="text-12 text-gray-700 hover:text-indigo-600 transition-colors"
+                >
+                  {filter.displayText}
+                </button>
                 <button
                   onClick={() => removeFilter(filter.id)}
                   className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-100 transition-colors"
                 >
                   <X size={10} className="text-gray-400" />
                 </button>
+
+                {/* Individual Filter Dropdown */}
+                {showFilterDropdown && editingFilterId === filter.id && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40"
+                      onClick={() => {
+                        setShowFilterDropdown(null);
+                        setEditingFilterId(null);
+                      }}
+                    />
+                    <div className="absolute top-full mt-8 left-0 z-50">
+                      <div className="w-full max-w-sm">
+                        {renderFilterDropdown(showFilterDropdown)}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
 
@@ -618,11 +842,7 @@ export const EmailNotificationList: React.FC = () => {
                     className="fixed inset-0 z-40"
                     onClick={() => setShowAddFilter(false)}
                   />
-                  <div className="fixed w-240 bg-white border border-gray-200 rounded-12 shadow-xl z-50 overflow-hidden" style={{
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)'
-                  }}>
+                  <div className="absolute top-full mt-8 left-0 w-240 bg-white border border-gray-200 rounded-12 shadow-xl z-50 overflow-hidden">
                     <div className="py-8">
                       {getAvailableFilterTypes().map((filterType) => (
                         <button
@@ -645,8 +865,8 @@ export const EmailNotificationList: React.FC = () => {
             </div>
           </div>
 
-          {/* Filter Dropdowns - Fixed Position Overlay */}
-          {showFilterDropdown && (
+          {/* Filter Dropdowns - Popover Overlay (only for new filters) */}
+          {showFilterDropdown && !editingFilterId && (
             <>
               {/* Backdrop */}
               <div 
@@ -654,9 +874,11 @@ export const EmailNotificationList: React.FC = () => {
                 onClick={() => setShowFilterDropdown(null)}
               />
               
-              {/* Overlay Dropdown */}
-              <div className="relative">
-                {renderFilterDropdown(showFilterDropdown)}
+              {/* Centered Overlay Dropdown */}
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-16">
+                <div className="w-full max-w-sm">
+                  {renderFilterDropdown(showFilterDropdown)}
+                </div>
               </div>
             </>
           )}
@@ -666,8 +888,8 @@ export const EmailNotificationList: React.FC = () => {
         <div className="border-t border-gray-200">
           {filteredNotifications.length === 0 ? (
                           <EmptyState />
-          ) : (
-            <>
+        ) : (
+          <>
               {paginatedNotifications.map((notification) => (
                 <div key={notification.id} className="border-b border-gray-100 p-16 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between">
@@ -691,7 +913,7 @@ export const EmailNotificationList: React.FC = () => {
                     </div>
                     
                     <div className="flex items-center gap-6 ml-12">
-                      <Button
+                      <Button 
                         variant="secondary"
                         onClick={() => {
                           setSelectedEmail(notification);
@@ -719,6 +941,23 @@ export const EmailNotificationList: React.FC = () => {
                           )}
                         </Button>
                       )}
+
+                      {notification.status === 'Failed' && (
+                        <Button
+                          onClick={() => handleRetryEmail(notification)}
+                          disabled={sendingEmails.has(notification.id)}
+                          className="min-w-20 px-8 py-4 text-12"
+                        >
+                          {sendingEmails.has(notification.id) ? (
+                            <LoadingSpinner size="sm" />
+                          ) : (
+                            <>
+                              <Send size={14} />
+                              Try Again
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -741,7 +980,7 @@ export const EmailNotificationList: React.FC = () => {
                     <option value={20}>20</option>
                   </select>
                 </div>
-                
+
                 <div className="flex items-center gap-12">
                   <span className="text-12 text-gray-600">
                     {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredNotifications.length)} of {filteredNotifications.length}
@@ -762,15 +1001,15 @@ export const EmailNotificationList: React.FC = () => {
                       
                       return (
                         <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
                           className={`w-24 h-24 rounded-4 text-12 font-medium transition-colors ${
                             currentPage === page
                               ? 'bg-indigo-600 text-white'
                               : 'border border-gray-300 text-gray-600 hover:bg-gray-50'
                           }`}
-                        >
-                          {page}
+                      >
+                        {page}
                         </button>
                       );
                     })}
@@ -785,8 +1024,8 @@ export const EmailNotificationList: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </>
-          )}
+          </>
+        )}
         </div>
       </Card>
 
@@ -841,27 +1080,28 @@ export const EmailNotificationList: React.FC = () => {
       {showEmailView && selectedEmail && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-8 shadow-xl max-w-4xl w-full max-h-[95vh] overflow-y-auto">
-            <EmailView
-              template={{
-                ...selectedEmail.template,
-                recipients: selectedEmail.recipients,
-                entityType: selectedEmail.entityType,
-                entityName: selectedEmail.entityName
-              }}
-              onClose={() => {
-                setShowEmailView(false);
-                setSelectedEmail(null);
-              }}
-            />
+              <EmailView
+                template={{
+                  ...selectedEmail.template,
+                  recipients: selectedEmail.recipients,
+                  entityType: selectedEmail.entityType,
+                  entityName: selectedEmail.entityName
+                }}
+                onClose={() => {
+                  setShowEmailView(false);
+                  setSelectedEmail(null);
+                }}
+              />
           </div>
         </div>
       )}
 
       {/* Toast */}
       {showToast && (
-        <Toast
+        <EnhancedToast
           message={toastMessage}
           type={toastType}
+          onClose={() => setShowToast(false)}
         />
       )}
     </div>

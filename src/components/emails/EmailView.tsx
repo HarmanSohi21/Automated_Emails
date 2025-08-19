@@ -616,8 +616,46 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                     value={priority}
                     onChange={(value) => setPriority(value)}
                     placeholder="Select priority"
-              />
-            </div>
+                  />
+                </div>
+              )}
+
+              {/* Go Live Date */}
+              <div className="flex items-center gap-8 mb-12">
+                <button
+                  onClick={() => setShowGoLive(!showGoLive)}
+                  className="flex items-center gap-4 text-sm text-indigo-600 hover:text-indigo-700"
+                >
+                  {showGoLive ? <Minus size={16} /> : <Plus size={16} />}
+                  Go Live Date
+                </button>
+              </div>
+              {showGoLive && (
+                <div className="mb-16">
+                  <div className="flex items-center justify-between mb-8">
+                    <label className="block text-14 font-medium text-dark-grey">
+                      Go Live Date
+                    </label>
+                    {goLiveDate && (
+                      <button
+                        type="button"
+                        onClick={() => setGoLiveDate('')}
+                        className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
+                        style={{ color: '#303F9F' }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="date"
+                    value={goLiveDate}
+                    onChange={(e) => setGoLiveDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]} // Only allow future dates
+                    className="w-full px-16 py-10 text-14 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+                    placeholder="Select go live date"
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -805,7 +843,12 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                         {(showGoLive && goLiveDate) && (
                           <div>
                             <span className="font-medium block mb-4" style={{ color: '#374151' }}>Go Live Date:</span>
-                            <span className="text-14">{goLiveDate}</span>
+                            <span className="text-14">{new Date(goLiveDate).toLocaleDateString('en-US', { 
+                              weekday: 'long', 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            })}</span>
                           </div>
                         )}
                         

@@ -5,12 +5,11 @@ import { Dropdown } from '../common/Dropdown';
 import { StatusBadge } from '../common/StatusBadge';
 import { PublisherBadge } from '../common/PublisherBadge';
 import { EntityTypeBadge } from '../common/EntityTypeBadge';
-import { Search, TrendingUp, DollarSign, Target, Zap, Check, X, AlertCircle, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, ChevronDown, ChevronRight, Plus, Filter, SlidersHorizontal, Users, BarChart3, Briefcase, AlertTriangle, MoreHorizontal, ChevronUp, ChevronDown as ChevronDownIcon, Minus, MessageSquare } from 'lucide-react';
+import { Search, TrendingUp, DollarSign, Target, Zap, Check, X, AlertCircle, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronRight, Plus, Filter, SlidersHorizontal, Users, BarChart3, Briefcase, AlertTriangle, MoreHorizontal, ChevronUp, ChevronDown as ChevronDownIcon, Minus, MessageSquare } from 'lucide-react';
 import { RecommendationStatus } from '../../types';
 import { PartialAcceptModal } from './PartialAcceptModal';
 import { RequestRecommendationForm } from './RequestRecommendationForm';
 import { useApp } from '../../context/AppContext';
-import { Calendar } from '../common/Calendar';
 import { Tooltip } from '../common/Tooltip';
 
 interface FilterChip {
@@ -57,19 +56,16 @@ export const RecommendationList: React.FC = () => {
   });
   const [showAddFilter, setShowAddFilter] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState<string | null>(null);
+  const [editingFilterId, setEditingFilterId] = useState<string | null>(null);
   const [tempFilterSelections, setTempFilterSelections] = useState<{[key: string]: string[]}>({});
   const [searchFilters, setSearchFilters] = useState<{[key: string]: string}>({});
-  
-     // Date filter state
-   const [showDatePicker, setShowDatePicker] = useState(false);
-   const [selectedDate, setSelectedDate] = useState('');
-   const [dateCondition, setDateCondition] = useState<'after' | 'before' | 'on'>('after');
 
   // Filter Options
-  const publisherOptions = ['ZipRecruiter', 'Monster', 'Snagajob', 'Jooble', 'OnTimeHire', 'Banya', 'Indeed', 'LinkedIn', 'Glassdoor', 'CareerBuilder', 'FlexJobs', 'Dice', 'AngelList', 'SimplyHired', 'PeoplePerHour', 'ClearanceJobs', 'TheLadders', 'JobStreet', 'RemoteOK', 'Upwork'];
-  const statusOptions = ['Sent', 'Pending', 'Accepted', 'Partially accepted', 'Rejected', 'Expired'];
+  const publisherOptions = ['ZipRecruiter', 'Monster', 'Snagajob', 'Indeed', 'LinkedIn', 'Glassdoor', 'CareerBuilder', 'AngelList'];
+  const statusOptions = ['Pending', 'Accepted', 'Partially accepted', 'Rejected', 'Sent', 'Expired'];
   const requestTypeOptions = ['CSE Requested', 'Publisher Requested'];
   const recommendationLevelOptions = ['Client', 'Campaign', 'Job Group'];
+  const dateOptions = ['Today', 'Yesterday', 'This week', 'Last week', 'This month', 'Last month', 'Last 30 days'];
   
      // Get available filter types (exclude already applied ones)
    const getAvailableFilterTypes = () => {
@@ -129,7 +125,16 @@ export const RecommendationList: React.FC = () => {
   // Handle adding a new filter
   const handleAddFilter = (filterType: string) => {
     setShowFilterDropdown(filterType);
+    setEditingFilterId(null);
     setTempFilterSelections({ ...tempFilterSelections, [filterType]: [] });
+    setShowAddFilter(false);
+  };
+
+  // Handle editing an existing filter
+  const handleEditFilter = (filter: FilterChip) => {
+    setShowFilterDropdown(filter.type);
+    setEditingFilterId(filter.id);
+    setTempFilterSelections({ ...tempFilterSelections, [filter.type]: filter.values });
     setShowAddFilter(false);
   };
 
@@ -156,34 +161,49 @@ export const RecommendationList: React.FC = () => {
     }
   };
 
-     // Apply filter
+     // Apply filter (handles both new and edited filters)
    const applyFilter = (filterType: string) => {
      if (filterType === 'date') {
        // For date filter, create chip with date range
-       if (!selectedDate) {
+       if (!tempFilterSelections[filterType] || tempFilterSelections[filterType].length === 0) {
          setShowFilterDropdown(null);
+         setEditingFilterId(null);
          return;
        }
        
-       const dateValue = selectedDate;
+       const dateValue = tempFilterSelections[filterType]![0];
        
-       const newFilter: FilterChip = {
-         id: `date-${Date.now()}`,
-         type: 'date',
+       const filterData = {
+         type: 'date' as const,
          label: 'Requested Date',
          values: [dateValue],
          displayText: `Requested Date: ${dateValue}`
        };
 
-       setAppliedFilters([...appliedFilters, newFilter]);
+       if (editingFilterId) {
+         // Update existing filter
+         setAppliedFilters(appliedFilters.map(f => 
+           f.id === editingFilterId ? { ...f, ...filterData } : f
+         ));
+       } else {
+         // Add new filter
+         const newFilter: FilterChip = {
+           id: `date-${Date.now()}`,
+           ...filterData
+         };
+         setAppliedFilters([...appliedFilters, newFilter]);
+       }
+
        setShowFilterDropdown(null);
-       setShowDatePicker(false);
+       setEditingFilterId(null);
+       setTempFilterSelections({}); // Clear temp selections after applying
        return;
      }
 
      const selections = tempFilterSelections[filterType] || [];
      if (selections.length === 0) {
        setShowFilterDropdown(null);
+       setEditingFilterId(null);
        return;
      }
 
@@ -193,16 +213,29 @@ export const RecommendationList: React.FC = () => {
                   filterType === 'client' ? 'Client name' :
                   filterType.charAt(0).toUpperCase() + filterType.slice(1);
      
-     const newFilter: FilterChip = {
-       id: `${filterType}-${Date.now()}`,
+     const filterData = {
        type: filterType as any,
        label,
        values: selections,
        displayText
      };
 
-     setAppliedFilters([...appliedFilters, newFilter]);
+     if (editingFilterId) {
+       // Update existing filter
+       setAppliedFilters(appliedFilters.map(f => 
+         f.id === editingFilterId ? { ...f, ...filterData } : f
+       ));
+     } else {
+       // Add new filter
+       const newFilter: FilterChip = {
+         id: `${filterType}-${Date.now()}`,
+         ...filterData
+       };
+       setAppliedFilters([...appliedFilters, newFilter]);
+     }
+
      setShowFilterDropdown(null);
+     setEditingFilterId(null);
      setTempFilterSelections({});
    };
 
@@ -254,32 +287,83 @@ export const RecommendationList: React.FC = () => {
           if (filter.values.length > 0) {
             const dateValue = filter.values[0];
             const now = new Date();
+            let startDate: Date;
+            let endDate: Date;
             
-            if (dateValue === 'This week') {
-              // Get start of this week (Monday)
-              const startOfWeek = new Date(now);
-              const day = now.getDay();
-              const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-              startOfWeek.setDate(diff);
-              startOfWeek.setHours(0, 0, 0, 0);
-              
-              // Get end of this week (Sunday)
-              const endOfWeek = new Date(startOfWeek);
-              endOfWeek.setDate(startOfWeek.getDate() + 6);
-              endOfWeek.setHours(23, 59, 59, 999);
-              
-              filtered = filtered.filter(rec => {
-                const requestedDate = new Date(rec.requestedAt);
-                return requestedDate >= startOfWeek && requestedDate <= endOfWeek;
-              });
-            } else {
-              // Handle specific date selection
-              const filterDate = new Date(dateValue);
-              filtered = filtered.filter(rec => {
-                const requestedDate = new Date(rec.requestedAt);
-                return requestedDate.toDateString() === filterDate.toDateString();
-              });
+            switch (dateValue) {
+              case 'Today':
+                startDate = new Date(now);
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(now);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'Yesterday':
+                startDate = new Date(now);
+                startDate.setDate(now.getDate() - 1);
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(now);
+                endDate.setDate(now.getDate() - 1);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'This week':
+                // Get start of this week (Monday)
+                startDate = new Date(now);
+                const day = now.getDay();
+                const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+                startDate.setDate(diff);
+                startDate.setHours(0, 0, 0, 0);
+                
+                // Get end of this week (Sunday)
+                endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 6);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'Last week':
+                // Get start of last week (Monday)
+                startDate = new Date(now);
+                const lastWeekDay = now.getDay();
+                const lastWeekDiff = now.getDate() - lastWeekDay + (lastWeekDay === 0 ? -6 : 1) - 7;
+                startDate.setDate(lastWeekDiff);
+                startDate.setHours(0, 0, 0, 0);
+                
+                // Get end of last week (Sunday)
+                endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 6);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'This month':
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'Last month':
+                startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'Last 30 days':
+                startDate = new Date(now);
+                startDate.setDate(now.getDate() - 30);
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(now);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              default:
+                // If no match, skip filtering
+                return;
             }
+            
+            filtered = filtered.filter(rec => {
+              const requestedDate = new Date(rec.requestedAt);
+              return requestedDate >= startDate && requestedDate <= endDate;
+            });
           }
           break;
       }
@@ -338,6 +422,16 @@ export const RecommendationList: React.FC = () => {
     return diffDays <= 2 && diffDays > 0;
   };
 
+  // Check if recommendation has expired (> 7 days since requested)
+  const checkExpired = (requestedAt: string): boolean => {
+    const requestedDate = new Date(requestedAt);
+    const now = new Date();
+    const diffTime = now.getTime() - requestedDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays > 7;
+  };
+
   // Determine if change is good or bad for cost metrics
   const isChangeGood = (metricType: string, changeDirection: 'increase' | 'decrease' | 'neutral'): boolean => {
     // For cost metrics (CPC Bid, CPA Goal, Budget), decreases are good (green)
@@ -370,32 +464,66 @@ export const RecommendationList: React.FC = () => {
   };
 
   const renderFilterDropdown = (filterType: string) => {
-     // Special handling for date filter
-     if (filterType === 'date') {
-    return (
-         <div className="fixed bg-white border border-gray-200 rounded-16 shadow-2xl z-50" style={{
-           top: '50%',
-           left: '50%',
-           transform: 'translate(-50%, -50%)',
-           maxHeight: '90vh',
-           maxWidth: '90vw'
-         }}>
-           <div className="overflow-y-auto max-h-full p-4">
-             <Calendar
-               selectedDate={selectedDate}
-               onDateSelect={(date: string) => setSelectedDate(date)}
-               condition={dateCondition}
-               onConditionChange={setDateCondition}
-               onCancel={() => {
-                 setShowFilterDropdown(null);
-                 setSelectedDate('');
-               }}
-               onApply={() => applyFilter('date')}
-             />
-           </div>
-      </div>
-    );
-  }
+    // Special handling for date filter
+    if (filterType === 'date') {
+      const selections = tempFilterSelections[filterType] || [];
+      
+      return (
+        <div className="w-full bg-white border border-gray-200 rounded-12 shadow-xl overflow-hidden">
+          <div className="p-16">
+            <h4 className="text-14 font-semibold text-gray-900 mb-12">Select Date Range</h4>
+            
+            <div className="space-y-8">
+              {dateOptions.map((option) => (
+                <div key={option} className="flex items-center">
+                  <input
+                    type="radio"
+                    id={`date-${option}`}
+                    name="dateRange"
+                    value={option}
+                    checked={selections.includes(option)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTempFilterSelections({
+                          ...tempFilterSelections,
+                          [filterType]: [option]
+                        });
+                      }
+                    }}
+                    className="h-16 w-16 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor={`date-${option}`} className="ml-8 text-14 text-gray-700 cursor-pointer">
+                    {option}
+                  </label>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex justify-end gap-8 mt-16 pt-16 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setShowFilterDropdown(null);
+                  setTempFilterSelections({
+                    ...tempFilterSelections,
+                    [filterType]: []
+                  });
+                }}
+                className="px-16 py-8 text-14 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => applyFilter('date')}
+                disabled={selections.length === 0}
+                className="px-16 py-8 bg-primary-600 text-white text-14 rounded-6 hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
      const selections = tempFilterSelections[filterType] || [];
      const searchTerm = searchFilters[filterType] || '';
@@ -431,10 +559,7 @@ export const RecommendationList: React.FC = () => {
      }
 
      return (
-       <div className="fixed mt-8 w-360 bg-white border border-gray-200 rounded-12 shadow-xl overflow-hidden z-50" style={{
-         top: '50%',
-         left: '50%',
-         transform: 'translate(-50%, -50%)',
+       <div className="w-full bg-white border border-gray-200 rounded-12 shadow-xl overflow-hidden" style={{
          maxHeight: '80vh'
        }}>
          {hasSearch && (
@@ -595,14 +720,37 @@ export const RecommendationList: React.FC = () => {
                  {/* Applied Filter Chips */}
                  {appliedFilters.map((filter) => (
                    <Tooltip key={filter.id} content={`${filter.label}: ${filter.values.join(', ')}`}>
-                     <div className="inline-flex items-center gap-8 px-16 py-8 bg-white border border-gray-200 rounded-8 text-14 shadow-sm hover:shadow-md transition-all duration-200">
-                       <span className="text-gray-900 font-medium">{filter.displayText}</span>
+                     <div className="relative inline-flex items-center gap-8 px-16 py-8 bg-white border border-gray-200 rounded-8 text-14 shadow-sm hover:shadow-md transition-all duration-200">
+                       <button
+                         onClick={() => handleEditFilter(filter)}
+                         className="text-gray-900 font-medium hover:text-indigo-600 transition-colors"
+                       >
+                         {filter.displayText}
+                       </button>
                        <button
                          onClick={() => removeFilter(filter.id)}
                          className="flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
                        >
                          <X size={12} />
                        </button>
+
+                       {/* Individual Filter Dropdown */}
+                       {showFilterDropdown && editingFilterId === filter.id && (
+                         <>
+                           <div 
+                             className="fixed inset-0 z-40"
+                             onClick={() => {
+                               setShowFilterDropdown(null);
+                               setEditingFilterId(null);
+                             }}
+                           />
+                           <div className="absolute top-full mt-8 left-0 z-50">
+                             <div className="w-full max-w-sm">
+                               {renderFilterDropdown(showFilterDropdown)}
+                             </div>
+                           </div>
+                         </>
+                       )}
                       </div>
                    </Tooltip>
                  ))}
@@ -617,17 +765,13 @@ export const RecommendationList: React.FC = () => {
                      Add Filter
                    </button>
 
-                                      {showAddFilter && (
+                   {showAddFilter && (
                      <>
                        <div 
                          className="fixed inset-0 z-40"
                          onClick={() => setShowAddFilter(false)}
                        />
-                       <div className="fixed w-240 bg-white border border-gray-200 rounded-12 shadow-xl z-50 overflow-hidden" style={{
-                         top: '50%',
-                         left: '50%',
-                         transform: 'translate(-50%, -50%)'
-                       }}>
+                       <div className="absolute top-full mt-8 left-0 w-240 bg-white border border-gray-200 rounded-12 shadow-xl z-50 overflow-hidden">
                          <div className="py-8">
                            {getAvailableFilterTypes().map((filterType) => (
                              <button
@@ -641,16 +785,16 @@ export const RecommendationList: React.FC = () => {
                            {getAvailableFilterTypes().length === 0 && (
                              <div className="px-16 py-12 text-14 text-gray-500 text-center">
                                All filters applied
-                        </div>
-                      )}
-                    </div>
-                          </div>
+                             </div>
+                           )}
+                         </div>
+                       </div>
                      </>
                    )}
-                        </div>
+                 </div>
                         
-                 {/* Filter Dropdowns - Fixed Position Overlay */}
-                 {showFilterDropdown && (
+                 {/* Filter Dropdowns - Popover Overlay (only for new filters) */}
+                 {showFilterDropdown && !editingFilterId && (
                    <>
                      {/* Backdrop */}
                      <div 
@@ -658,9 +802,11 @@ export const RecommendationList: React.FC = () => {
                        onClick={() => setShowFilterDropdown(null)}
                      />
                      
-                     {/* Overlay Dropdown */}
-                     <div className="relative">
-                       {renderFilterDropdown(showFilterDropdown)}
+                     {/* Centered Overlay Dropdown */}
+                     <div className="fixed inset-0 z-50 flex items-center justify-center p-16">
+                       <div className="w-full max-w-sm">
+                         {renderFilterDropdown(showFilterDropdown)}
+                       </div>
                      </div>
                    </>
                  )}
@@ -711,12 +857,15 @@ export const RecommendationList: React.FC = () => {
                               {/* Badge Row */}
                               <div className="flex items-center gap-12 mb-8">
                                 <PublisherBadge name={rec.publisherName} type="Job" />
-                                <StatusBadge status={rec.status} type="recommendation" />
-                                {isExpiringSoon && (
+                                <StatusBadge 
+                                  status={checkExpired(rec.requestedAt) ? 'Expired' : rec.status} 
+                                  type="recommendation" 
+                                />
+                                {isExpiringSoon && !checkExpired(rec.requestedAt) && (
                                   <span className="joveo-badge bg-orange-50 text-orange-600 border border-orange-200">
                                     <AlertTriangle size={10} />
                                     Expiring Soon
-                              </span>
+                                  </span>
                                 )}
                                 <span className="text-11 text-gray-500">
                                   {new Date(rec.requestedAt).toLocaleDateString()}
@@ -732,7 +881,7 @@ export const RecommendationList: React.FC = () => {
                             
                             {/* Actions */}
                             <div className="flex items-center gap-6 ml-12">
-                              {rec.status === 'Pending' && (
+                              {rec.status === 'Pending' && !checkExpired(rec.requestedAt) && (
                                 <div className="relative" onClick={(e) => e.stopPropagation()}>
                                   <Button
                                     variant="primary"
@@ -800,12 +949,21 @@ export const RecommendationList: React.FC = () => {
                                       <th className="text-right py-8 px-12 text-11 font-semibold text-gray-600 uppercase tracking-wide">
                                         CSE Value
                                       </th>
-                                      <th className="text-right py-8 px-12 text-11 font-semibold text-gray-600 uppercase tracking-wide">
-                                        PUB Value
-                                      </th>
-                                      <th className="text-right py-8 px-12 text-11 font-semibold text-gray-600 uppercase tracking-wide">
-                                        Change
-                                      </th>
+                                      {rec.status !== 'Sent' && (
+                                        <>
+                                          <th className="text-right py-8 px-12 text-11 font-semibold text-gray-600 uppercase tracking-wide">
+                                            PUB Value
+                                          </th>
+                                          <th className="text-right py-8 px-12 text-11 font-semibold text-gray-600 uppercase tracking-wide">
+                                            Change
+                                          </th>
+                                        </>
+                                      )}
+                                      {rec.status === 'Sent' && (
+                                        <th className="text-center py-8 px-12 text-11 font-semibold text-gray-600 uppercase tracking-wide">
+                                          Status
+                                        </th>
+                                      )}
                                       {rec.status === 'Partially accepted' && (
                                         <th className="text-center py-8 px-12 text-11 font-semibold text-gray-600 uppercase tracking-wide">
                                           Status
@@ -814,12 +972,14 @@ export const RecommendationList: React.FC = () => {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {rec.metrics.filter(metric => metric.recommendedValue !== undefined).map((metric, index) => {
-                                      const change = calculatePercentageChange(
+                                    {rec.metrics.filter(metric => 
+                                      rec.status === 'Sent' ? true : metric.recommendedValue !== undefined
+                                    ).map((metric, index) => {
+                                      const change = rec.status !== 'Sent' ? calculatePercentageChange(
                                         metric.currentValue, 
                                         metric.recommendedValue || metric.currentValue
-                                      );
-                                      const isGoodChange = isChangeGood(metric.type, change.direction);
+                                      ) : null;
+                                      const isGoodChange = change ? isChangeGood(metric.type, change.direction) : false;
                                       
                                       return (
                                         <React.Fragment key={index}>
@@ -839,21 +999,34 @@ export const RecommendationList: React.FC = () => {
                                             <td className="py-8 px-12 text-right text-12 font-medium text-dark-grey">
                                               {formatCurrency(metric.currentValue)}
                                             </td>
-                                            <td className="py-8 px-12 text-right text-12 font-semibold text-blue-600">
-                                              {formatCurrency(metric.recommendedValue)}
-                                            </td>
-                                            <td className="py-8 px-12 text-right">
-                                              <div className={`flex items-center justify-end gap-4 text-12 font-medium ${
-                                                isGoodChange ? 'text-green-600' : 'text-red-600'
-                                              }`}>
-                                                {change.direction === 'increase' ? (
-                                                  <ChevronUp size={12} />
-                                                ) : (
-                                                  <ChevronDown size={12} />
-                                                )}
-                                                {change.direction === 'increase' ? '+' : ''}{change.percentage}%
-                          </div>
-                                            </td>
+                                            {rec.status !== 'Sent' && (
+                                              <>
+                                                <td className="py-8 px-12 text-right text-12 font-semibold text-blue-600">
+                                                  {formatCurrency(metric.recommendedValue)}
+                                                </td>
+                                                <td className="py-8 px-12 text-right">
+                                                  {change && (
+                                                    <div className={`flex items-center justify-end gap-4 text-12 font-medium ${
+                                                      isGoodChange ? 'text-green-600' : 'text-red-600'
+                                                    }`}>
+                                                      {change.direction === 'increase' ? (
+                                                        <ChevronUp size={12} />
+                                                      ) : (
+                                                        <ChevronDown size={12} />
+                                                      )}
+                                                      {change.direction === 'increase' ? '+' : ''}{change.percentage}%
+                                                    </div>
+                                                  )}
+                                                </td>
+                                              </>
+                                            )}
+                                            {rec.status === 'Sent' && (
+                                              <td className="py-8 px-12 text-center">
+                                                <span className="joveo-badge-sm bg-blue-50 text-blue-600 border border-blue-200">
+                                                  Waiting for Publisher
+                                                </span>
+                                              </td>
+                                            )}
                                             {rec.status === 'Partially accepted' && (
                                               <td className="py-8 px-12 text-center">
                                                 {metric.acceptanceStatus === 'accepted' ? (
@@ -865,7 +1038,7 @@ export const RecommendationList: React.FC = () => {
                                                   <span className="joveo-badge-sm bg-red-50 text-red-600 border border-red-200">
                                                     <X size={10} className="mr-2" />
                                                     Rejected
-                              </span>
+                                                  </span>
                                                 ) : (
                                                   <span className="joveo-badge-sm bg-gray-50 text-gray-600 border border-gray-200">
                                                     Pending

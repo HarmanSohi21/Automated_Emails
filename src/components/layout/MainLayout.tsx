@@ -24,7 +24,7 @@ export const MainLayout: React.FC = () => {
   const recommendationsCount = recommendations.filter(rec => rec.status === 'Pending').length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200">
         <Header />
@@ -40,9 +40,9 @@ export const MainLayout: React.FC = () => {
         />
       </div>
       
-      {/* Main Content Area - Scrollable */}
-      <main className="ml-248 pt-64 min-h-screen">
-        <div>
+      {/* Main Content Area - Scrollable with flex-grow */}
+      <main className="ml-248 pt-64 flex-grow flex flex-col">
+        <div className="flex-grow">
           {!hasRequiredSelections ? (
             <EmptyState showSelectionPrompt={true} />
           ) : (
@@ -51,10 +51,10 @@ export const MainLayout: React.FC = () => {
               {currentView === 'entities' && <EmailNotificationList />}
             </>
           )}
-          
-          {/* Footer within scrollable content */}
-          <Footer />
         </div>
+        
+        {/* Footer at bottom of main content area */}
+        <Footer />
       </main>
     </div>
   );

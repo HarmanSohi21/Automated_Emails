@@ -1,6 +1,6 @@
 export type RecommendationType = 'CPC Bid' | 'CPA Goal' | 'Budget';
 export type EntityType = 'Client' | 'Campaign' | 'JobGroup';
-export type FeedStatus = 'Processing' | 'Ready' | 'Sent' | 'Failed';
+export type FeedStatus = 'Processing' | 'Ready' | 'Sent' | 'Failed' | 'Expired';
 export type RecommendationStatus = 'Sent' | 'Pending' | 'Accepted' | 'Partially accepted' | 'Rejected' | 'Expired';
 export type PublisherType = 'Flat CPC' | 'Flat CPA' | 'CPA' | 'CPC' | 'TCPA';
 export type Priority = 'Urgent' | 'High' | 'Medium' | 'Low';

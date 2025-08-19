@@ -125,14 +125,23 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
   const [emailSent, setEmailSent] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  
+  // Track which fields have been manually cleared to prevent auto-reset
+  const [userClearedFields, setUserClearedFields] = useState<Set<string>>(new Set());
 
-  // Update metrics when publisher changes
+  // Update metrics when publisher changes, but only if user hasn't manually cleared them
   useEffect(() => {
     const metrics = getCurrentMetrics();
-    setCpcBid((metrics.cpcBid || 0).toString());
-    setCpaGoal((metrics.cpaGoal || 0).toString());
-    setBudget((metrics.budget || 0).toString());
-  }, [currentPublisherIndex, template.currentMetrics]);
+    if (!userClearedFields.has('cpcBid')) {
+      setCpcBid((metrics.cpcBid || 0).toString());
+    }
+    if (!userClearedFields.has('cpaGoal')) {
+      setCpaGoal((metrics.cpaGoal || 0).toString());
+    }
+    if (!userClearedFields.has('budget')) {
+      setBudget((metrics.budget || 0).toString());
+    }
+  }, [currentPublisherIndex, userClearedFields]);
 
   // Update subject when template changes
   useEffect(() => {
@@ -140,6 +149,9 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
   }, [template.priority, template.clientName]);
 
   const clearField = (field: 'cpcBid' | 'cpaGoal' | 'budget') => {
+    // Mark field as manually cleared
+    setUserClearedFields(prev => new Set(prev).add(field));
+    
     switch (field) {
       case 'cpcBid':
         setCpcBid('');
@@ -402,7 +414,7 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                           <label className="block text-12 font-medium" style={{ color: '#3D4759' }}>
                             Current CPC Bid
                           </label>
-                          {cpcBid && (
+                          {cpcBid && cpcBid.length > 0 && (
                             <button
                               type="button"
                               onClick={() => clearField('cpcBid')}
@@ -417,7 +429,17 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                           <Input
                             type="text"
                             value={cpcBid}
-                            onChange={(e) => setCpcBid(e.target.value)}
+                            onChange={(e) => {
+                              setCpcBid(e.target.value);
+                              // Remove from cleared fields when user types
+                              if (e.target.value) {
+                                setUserClearedFields(prev => {
+                                  const newSet = new Set(prev);
+                                  newSet.delete('cpcBid');
+                                  return newSet;
+                                });
+                              }
+                            }}
                             placeholder="Enter CPC Bid value"
                             style={{ paddingLeft: '45px !important' }}
                             className="!pl-45"
@@ -434,7 +456,7 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                           <label className="block text-12 font-medium" style={{ color: '#3D4759' }}>
                             Current CPA Goal
                           </label>
-                          {cpaGoal && (
+                          {cpaGoal && cpaGoal.length > 0 && (
                             <button
                               type="button"
                               onClick={() => clearField('cpaGoal')}
@@ -449,7 +471,17 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                           <Input
                             type="text"
                             value={cpaGoal}
-                            onChange={(e) => setCpaGoal(e.target.value)}
+                            onChange={(e) => {
+                              setCpaGoal(e.target.value);
+                              // Remove from cleared fields when user types
+                              if (e.target.value) {
+                                setUserClearedFields(prev => {
+                                  const newSet = new Set(prev);
+                                  newSet.delete('cpaGoal');
+                                  return newSet;
+                                });
+                              }
+                            }}
                             placeholder="Enter CPA Goal value"
                             style={{ paddingLeft: '45px !important' }}
                             className="!pl-45"
@@ -466,7 +498,7 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                           <label className="block text-12 font-medium" style={{ color: '#3D4759' }}>
                             <span className="text-red-500">*</span> Current Budget
                           </label>
-                          {budget && (
+                          {budget && budget.length > 0 && (
                             <button
                               type="button"
                               onClick={() => clearField('budget')}
@@ -475,13 +507,23 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                             >
                               Clear
                             </button>
-            )}
+                          )}
           </div>
                         <div className="relative">
                           <Input
                             type="text"
                             value={budget}
-                            onChange={(e) => setBudget(e.target.value)}
+                            onChange={(e) => {
+                              setBudget(e.target.value);
+                              // Remove from cleared fields when user types
+                              if (e.target.value) {
+                                setUserClearedFields(prev => {
+                                  const newSet = new Set(prev);
+                                  newSet.delete('budget');
+                                  return newSet;
+                                });
+                              }
+                            }}
                             placeholder="Enter Budget value"
                             style={{ paddingLeft: '45px !important' }}
                             className="!pl-45"

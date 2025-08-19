@@ -77,6 +77,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const defaultInstance = instances[0];
       if (defaultInstance) {
         setSelectedInstanceId(defaultInstance.id);
+        // Auto-select all clients for the default instance
+        const instanceClients = getClientsByInstance(defaultInstance.id);
+        const clientIds = instanceClients.map(client => client.id);
+        setSelectedClientIds(clientIds);
       }
     }
     
@@ -104,8 +108,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const setSelectedInstance = (instanceId: string | null) => {
     setSelectedInstanceId(instanceId);
-    // Clear selected clients when changing instance
-    setSelectedClientIds([]);
+    // Auto-select all clients for the selected instance
+    if (instanceId) {
+      const instanceClients = getClientsByInstance(instanceId);
+      const clientIds = instanceClients.map(client => client.id);
+      setSelectedClientIds(clientIds);
+    } else {
+      setSelectedClientIds([]);
+    }
   };
 
   const setSelectedClients = (clientIds: string[]) => {
@@ -218,6 +228,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       entityType: mockRec.entityType,
       publisherId: payload.publisherId,
       publisherName: mockRec.publisherName,
+      clientId: mockRec.clientId,
+      clientName: mockRec.clientName,
       level: payload.level,
       metrics: mockRec.metrics, // Use template metrics
       duration: payload.duration,

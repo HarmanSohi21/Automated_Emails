@@ -104,11 +104,10 @@ export const instances: Instance[] = [
       { id: 'ubereats', name: 'UberEats', poc: [{ name: 'Amanda Lee', email: 'amanda@uber.com', role: 'UberEats Hiring Manager' }], metrics: { budget: 180000, cpcBid: 4.1, cpaGoal: 68 } },
       { id: 'uber-freight', name: 'Uber Freight', poc: [{ name: 'Robert Johnson', email: 'robert@uber.com', role: 'Freight Operations' }], metrics: { budget: 150000, cpcBid: 3.6, cpaGoal: 58 } },
       { id: 'uber-main', name: 'Uber', poc: [{ name: 'Jennifer Davis', email: 'jennifer@uber.com', role: 'Global Talent Acquisition' }], metrics: { budget: 250000, cpcBid: 4.8, cpaGoal: 78 } },
-      { id: 'arena-io', name: 'Arena.io', poc: [{ name: 'Kevin Park', email: 'kevin@arena.io', role: 'Tech Recruiting Lead' }], metrics: { budget: 60000, cpcBid: 3.2, cpaGoal: 52 } },
-      { id: 'cellular-sales', name: 'Cellular Sales', poc: [{ name: 'Lisa Thompson', email: 'lisa@cellularsales.com', role: 'Retail Recruiter' }], metrics: { budget: 40000, cpcBid: 2.4, cpaGoal: 35 } },
-      { id: 'delaware-north', name: 'Delaware North', poc: [{ name: 'Mark Robinson', email: 'mark@delawarenorth.com', role: 'Hospitality Recruiter' }], metrics: { budget: 75000, cpcBid: 2.7, cpaGoal: 44 } },
-      { id: 'didi', name: 'DiDi', poc: [{ name: 'Zhang Wei', email: 'zhang@didiglobal.com', role: 'Asia Pacific Recruiter' }], metrics: { budget: 95000, cpcBid: 3.4, cpaGoal: 56 } },
-      { id: 'eri', name: 'ERI', poc: [{ name: 'Emma Garcia', email: 'emma@eri.com', role: 'Environmental Recruiter' }], metrics: { budget: 55000, cpcBid: 2.8, cpaGoal: 46 } },
+      { id: 'uber-delivery', name: 'UberDelivery', poc: [{ name: 'Kevin Park', email: 'kevin@uber.com', role: 'Delivery Operations Manager' }], metrics: { budget: 60000, cpcBid: 3.2, cpaGoal: 52 } },
+      { id: 'uber-logistics', name: 'UberLogistics', poc: [{ name: 'Lisa Thompson', email: 'lisa@uber.com', role: 'Logistics Recruiter' }], metrics: { budget: 40000, cpcBid: 2.4, cpaGoal: 35 } },
+      { id: 'uber-business', name: 'UberBusiness', poc: [{ name: 'Mark Robinson', email: 'mark@uber.com', role: 'Business Solutions Lead' }], metrics: { budget: 75000, cpcBid: 2.7, cpaGoal: 44 } },
+      { id: 'uber-corporate', name: 'UberCorporate', poc: [{ name: 'Zhang Wei', email: 'zhang@uber.com', role: 'Corporate Talent Acquisition' }], metrics: { budget: 95000, cpcBid: 3.4, cpaGoal: 56 } },
       { id: 'uberexchange', name: 'UberExchange', poc: [{ name: 'Ryan Martinez', email: 'ryan@uber.com', role: 'Exchange Platform Lead' }], metrics: { budget: 70000, cpcBid: 3.1, cpaGoal: 49 } },
       { id: 'uberdrivers', name: 'UberDrivers', poc: [{ name: 'Nicole Brown', email: 'nicole@uber.com', role: 'Driver Acquisition Manager' }], metrics: { budget: 130000, cpcBid: 3.9, cpaGoal: 62 } }
     ]
@@ -204,14 +203,13 @@ const generateEmailNotification = (
 
 // Generate recommendation metrics
 const generateRecommendationMetrics = (type: RecommendationType): RecommendationMetric[] => {
-  const baseMetrics = [
+  const allMetrics = [
     {
       type: 'CPC Bid' as RecommendationType,
       currentValue: 2.50,
       recommendedValue: 3.25,
       isMandatory: true,
       isRequested: true, // This was specifically requested
-      status: 'pending' as const,
       potentialImprovement: '+30% more traffic'
     },
     {
@@ -220,7 +218,6 @@ const generateRecommendationMetrics = (type: RecommendationType): Recommendation
       recommendedValue: 38.50,
       isMandatory: false,
       isRequested: false, // Optional metric, not requested
-      status: 'pending' as const,
       potentialImprovement: '+14% efficiency'
     },
     {
@@ -229,12 +226,12 @@ const generateRecommendationMetrics = (type: RecommendationType): Recommendation
       recommendedValue: 18000,
       isMandatory: true,
       isRequested: true, // This was specifically requested
-      status: 'pending' as const,
       potentialImprovement: '+20% reach'
     }
   ];
   
-  return baseMetrics.filter(metric => metric.type === type || Math.random() > 0.5);
+  // Return all metrics for richer demo data
+  return allMetrics;
 };
 
 // Generate recommendation
@@ -411,30 +408,46 @@ export const mockEmailNotifications: EmailNotification[] = [
   })
 ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-// Enhanced mock recommendations - comprehensive coverage
+// Enhanced mock recommendations - comprehensive coverage for demo
 export const mockRecommendations: Recommendation[] = [
-  
-  // Generate 100+ comprehensive recommendations for all clients
-  ...Array.from({ length: 100 }, (_, index) => {
+  // THIS WEEK recommendations (for default filter)
+  ...Array.from({ length: 25 }, (_, index) => {
     const allClients = getAllClients();
-    const clientIndex = index % allClients.length;
-    const client = allClients[clientIndex];
+    const client = allClients[index % allClients.length];
     
-    const entityTypes: EntityType[] = ['Campaign', 'JobGroup'];
+    // Ensure good coverage across all dimensions
+    const entityTypes: EntityType[] = ['Campaign', 'JobGroup', 'Client'];
     const metricTypes: RecommendationType[] = ['CPC Bid', 'CPA Goal', 'Budget'];
-    const statuses: RecommendationStatus[] = ['Pending', 'Accepted', 'Sent', 'Partially accepted', 'Rejected', 'Expired'];
+    const statuses: RecommendationStatus[] = ['Pending', 'Accepted', 'Partially accepted', 'Rejected', 'Sent'];
+    const publishers = ['ZipRecruiter', 'Monster', 'Snagajob', 'Indeed', 'LinkedIn', 'Glassdoor', 'CareerBuilder', 'AngelList'];
+    const priorities = ['Urgent', 'High', 'Medium', 'Low'];
+    const requestTypes = ['CSE_REQUEST', 'PROACTIVE_PUBLISHER'];
     
     const entityType = entityTypes[index % entityTypes.length];
     const metricType = metricTypes[index % metricTypes.length];
-    const status = statuses[Math.floor(index / 16) % statuses.length];
+    const status = statuses[index % statuses.length];
+    const publisherName = publishers[index % publishers.length];
+    const priority = priorities[index % priorities.length] as 'Urgent' | 'High' | 'Medium' | 'Low';
+    const requestType = requestTypes[index % requestTypes.length] as 'CSE_REQUEST' | 'PROACTIVE_PUBLISHER';
     
-    const entityNames = [
-      'Tech Recruitment Drive', 'Sales Performance Boost', 'Customer Acquisition',
-      'Brand Awareness Campaign', 'Lead Generation Initiative', 'Talent Pipeline',
-      'Market Expansion', 'Product Launch Support', 'Retention Strategy',
-      'Growth Optimization', 'Quality Improvement', 'Efficiency Enhancement'
-    ];
-    const entityName = `${entityNames[index % entityNames.length]} - ${client.name}`;
+    const entityNames = {
+      Campaign: [
+        'Tech Recruitment Drive', 'Sales Performance Boost', 'Customer Acquisition',
+        'Brand Awareness Campaign', 'Lead Generation Initiative', 'Market Expansion',
+        'Product Launch Support', 'Retention Strategy', 'Growth Optimization'
+      ],
+      JobGroup: [
+        'Senior Developer Roles', 'Marketing Specialists', 'Sales Representatives',
+        'Customer Support Team', 'Data Analytics Team', 'Operations Management',
+        'Quality Assurance', 'Business Development', 'Technical Support'
+      ],
+      Client: [
+        'Account Setup', 'Platform Integration', 'Service Optimization',
+        'Client Onboarding', 'Performance Review', 'Strategic Planning'
+      ]
+    };
+    
+    const entityName = `${entityNames[entityType][index % entityNames[entityType].length]} - ${client.name}`;
     
     const entity = generateEntity(
       `rec-entity-${client.id}-${index}`,
@@ -445,52 +458,68 @@ export const mockRecommendations: Recommendation[] = [
       'Ready'
     );
     
-    // Generate metrics with acceptance status for partially accepted recommendations
-    const generateMetricsWithStatus = () => {
-      const metrics = generateRecommendationMetrics(metricType);
-      
-      // If status is "Partially accepted", add acceptance status to metrics
+    // Generate metrics with proper acceptance status
+    const metrics = generateRecommendationMetrics(metricType).map((metric, metricIndex) => {
       if (status === 'Partially accepted') {
-        return metrics.map((metric, i) => ({
-          ...metric,
-          acceptanceStatus: (i === 0 ? 'accepted' : i === 1 ? 'rejected' : 'accepted') as 'accepted' | 'rejected' | 'pending'
-        }));
+        // For partially accepted, metrics can only be 'accepted' or 'rejected' (no pending)
+        const acceptanceStatus = (index + metricIndex) % 2 === 0 ? 'accepted' : 'rejected';
+        return { ...metric, acceptanceStatus: acceptanceStatus as 'accepted' | 'rejected' };
       }
-      
-      return metrics;
-    };
+      return metric;
+    });
     
-    return generateRecommendation(
-      `rec-${index + 1}`,
-      entity,
-      metricType,
+    // Calculate days ago for this week (0-6 days ago)
+    const daysAgo = index % 7;
+    const requestedAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+    
+    // Some recommendations expiring soon (< 2 days)
+    const isExpiringSoon = index % 8 === 0;
+    const expiresAt = isExpiringSoon 
+      ? new Date(Date.now() + (Math.random() * 1.5) * 24 * 60 * 60 * 1000).toISOString()
+      : new Date(Date.now() + (7 + Math.random() * 7) * 24 * 60 * 60 * 1000).toISOString();
+    
+    return {
+      id: `rec-${index + 1}`,
+      entityId: entity.id,
+      entityName: entity.name,
+      entityType: entity.type,
+      publisherId: `pub-${index % publishers.length + 1}`,
+      publisherName,
+      clientId: entity.clientId,
+      clientName: entity.clientName,
+      level: entity.type,
+      metrics,
+      duration: index % 2 === 0 ? 'This Month' : 'Next Month',
       status,
-      generateMetricsWithStatus()
-    );
+      requestedAt,
+      expiresAt,
+      requestType: requestType as 'CSE_REQUEST' | 'PROACTIVE_PUBLISHER',
+      priority: priority as 'Urgent' | 'High' | 'Medium' | 'Low',
+      notes: index % 4 === 0 ? "CPA in this category tends to go high due to market demand. Recommend increasing budget for better performance." : 
+             index % 4 === 1 ? "Difficult to hire category, requires higher CPA goals. Historical data supports these recommendations." :
+             index % 4 === 2 ? "Seasonal trend shows better performance with increased budget and CPC adjustments." : ""
+    };
   }),
-
-  // Ensure every publisher appears at least once in Recommendations
-  ...publishers.map((publisher, index) => {
+  
+  // OLDER recommendations (for other date filters)
+  ...Array.from({ length: 30 }, (_, index) => {
     const allClients = getAllClients();
     const client = allClients[index % allClients.length];
     
-    const entityTypes: EntityType[] = ['Campaign', 'JobGroup'];
+    const entityTypes: EntityType[] = ['Campaign', 'JobGroup', 'Client'];
     const metricTypes: RecommendationType[] = ['CPC Bid', 'CPA Goal', 'Budget'];
-    const statuses: RecommendationStatus[] = ['Pending', 'Accepted', 'Sent', 'Partially accepted'];
+    const statuses: RecommendationStatus[] = ['Accepted', 'Rejected', 'Sent']; // Removed 'Expired'
+    const publishers = ['ZipRecruiter', 'Monster', 'Snagajob', 'Indeed', 'LinkedIn', 'Glassdoor', 'CareerBuilder', 'AngelList'];
     
     const entityType = entityTypes[index % entityTypes.length];
     const metricType = metricTypes[index % metricTypes.length];
     const status = statuses[index % statuses.length];
+    const publisherName = publishers[index % publishers.length];
     
-    const entityNames = [
-      'Publisher Optimization Campaign', 'Channel Performance Drive', 'Revenue Enhancement',
-      'Conversion Improvement', 'Cost Efficiency Project', 'ROI Maximization'
-    ];
-    
-    const entityName = `${entityNames[index % entityNames.length]} (${publisher.name}) - ${client.name}`;
+    const entityName = `Historical ${entityType} ${index + 26} - ${client.name}`;
     
     const entity = generateEntity(
-      `pub-rec-entity-${publisher.id}`,
+      `hist-entity-${client.id}-${index}`,
       entityName,
       entityType,
       client.id,
@@ -498,16 +527,31 @@ export const mockRecommendations: Recommendation[] = [
       'Ready'
     );
     
+    const metrics = generateRecommendationMetrics(metricType);
+    
+    // Generate dates from 8-60 days ago for older data
+    const daysAgo = 8 + (index % 52);
+    const requestedAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() - (daysAgo - 14) * 24 * 60 * 60 * 1000).toISOString();
+    
     return {
-      ...generateRecommendation(
-        `pub-rec-${publisher.id}`,
-        entity,
-        metricType,
-        status,
-        generateRecommendationMetrics(metricType) // Add the metrics parameter
-      ),
-      publisherId: publisher.id,
-      publisherName: publisher.name
+      id: `hist-rec-${index + 1}`,
+      entityId: entity.id,
+      entityName: entity.name,
+      entityType: entity.type,
+      publisherId: `pub-${index % publishers.length + 1}`,
+      publisherName,
+      clientId: entity.clientId,
+      clientName: entity.clientName,
+      level: entity.type,
+      metrics,
+      duration: index % 2 === 0 ? 'This Month' : 'Next Month',
+      status,
+      requestedAt,
+      expiresAt,
+      requestType: index % 2 === 0 ? 'CSE_REQUEST' : 'PROACTIVE_PUBLISHER',
+      priority: ['Urgent', 'High', 'Medium', 'Low'][index % 4] as 'Urgent' | 'High' | 'Medium' | 'Low',
+      notes: index % 3 === 0 ? "Competition is fierce in this market. Higher bids recommended for better visibility." : ""
     };
   })
 ].sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());

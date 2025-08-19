@@ -21,6 +21,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, type = 'entity
       case 'Failed':
         badgeClasses = 'bg-red-100 text-red-700 border-red-200';
         break;
+      case 'Expired':
+        badgeClasses = 'bg-gray-100 text-gray-700 border-gray-200';
+        break;
       case 'Due Today':
         badgeClasses = 'bg-orange-100 text-orange-700 border-orange-200';
         break;
