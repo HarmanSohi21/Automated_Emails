@@ -14,10 +14,12 @@ interface EmailPreviewProps {
       budget?: number;
       cpcBid?: number;
       cpaGoal?: number;
+      duration?: 'Daily' | 'Weekly' | 'Monthly';
     } | Array<{
       budget?: number;
       cpcBid?: number;
       cpaGoal?: number;
+      duration?: 'Daily' | 'Weekly' | 'Monthly';
     }>;
     feedUrl?: string;
     landingPage?: string;
@@ -507,7 +509,7 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                             >
                               Clear
                             </button>
-                          )}
+            )}
           </div>
                         <div className="relative">
                           <Input
@@ -525,11 +527,16 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                               }
                             }}
                             placeholder="Enter Budget value"
-                            style={{ paddingLeft: '45px !important' }}
-                            className="!pl-45"
+                            style={{ paddingLeft: '45px !important', paddingRight: '80px !important' }}
+                            className="!pl-45 !pr-80"
                           />
                           <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
                             $
+                          </span>
+                          <span className="absolute right-16 top-1/2 transform -translate-y-1/2 text-12 text-gray-500 pointer-events-none">
+                            {template.currentMetrics && Array.isArray(template.currentMetrics) 
+                              ? template.currentMetrics[0]?.duration || 'Monthly'
+                              : (template.currentMetrics as any)?.duration || 'Monthly'}
                           </span>
                         </div>
                       </div>
@@ -563,13 +570,13 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                 </div>
 
                 {/* Additional Information - Separate Box if Needed */}
-                {(template.feedUrl || template.landingPage || additionalNote) && (
+                {((template.entityType === 'Client' && (template.feedUrl || template.landingPage)) || additionalNote) && (
                   <div style={{ backgroundColor: '#FFFBEB' }} className="border border-amber-200 rounded-8 p-20">
                     <h3 className="text-16 font-semibold mb-16" style={{ color: '#374151' }}>
                       Additional Information
                     </h3>
                     <div className="space-y-12 text-14">
-                      {template.feedUrl && (
+                      {template.entityType === 'Client' && template.feedUrl && (
                         <div>
                           <span className="font-medium block mb-4" style={{ color: '#374151' }}>Feed URL:</span>
                           <a href={template.feedUrl} className="underline" style={{ color: '#303F9F' }}>
@@ -578,7 +585,7 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
                         </div>
                       )}
                       
-                      {template.landingPage && (
+                      {template.entityType === 'Client' && template.landingPage && (
                         <div>
                           <span className="font-medium block mb-4" style={{ color: '#374151' }}>Landing Page:</span>
                           <a href={template.landingPage} className="underline" style={{ color: '#303F9F' }}>

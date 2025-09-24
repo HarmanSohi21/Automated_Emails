@@ -8,13 +8,14 @@ import { EntityTypeBadge } from '../common/EntityTypeBadge';
 import { Search, TrendingUp, DollarSign, Target, Zap, Check, X, AlertCircle, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronRight, Plus, Filter, SlidersHorizontal, Users, BarChart3, Briefcase, AlertTriangle, MoreHorizontal, ChevronUp, ChevronDown as ChevronDownIcon, Minus, MessageSquare } from 'lucide-react';
 import { RecommendationStatus } from '../../types';
 import { PartialAcceptModal } from './PartialAcceptModal';
+import { RejectAllModal } from './RejectAllModal';
 import { RequestRecommendationForm } from './RequestRecommendationForm';
 import { useApp } from '../../context/AppContext';
 import { Tooltip } from '../common/Tooltip';
 
 interface FilterChip {
   id: string;
-  type: 'publisher' | 'client' | 'status' | 'requestType' | 'recommendationLevel' | 'date';
+  type: 'publisher' | 'client' | 'status' | 'requestType' | 'recommendationLevel' | 'date' | 'recommendationDuration';
   label: string;
   values: string[];
   displayText: string;
@@ -29,13 +30,18 @@ export const RecommendationList: React.FC = () => {
     selectedClientIds,
     setSelectedClients,
     getSelectedClients,
-    getAvailableClients
+    getAvailableClients,
+    clients
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'logs' | 'request'>('logs');
   const [searchTerm, setSearchTerm] = useState('');
   const [showPartialAcceptModal, setShowPartialAcceptModal] = useState(false);
+  const [showRejectAllModal, setShowRejectAllModal] = useState(false);
+  const [showAcceptAllWarningModal, setShowAcceptAllWarningModal] = useState(false);
   const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [actionDropdown, setActionDropdown] = useState<string | null>(null);
 
@@ -60,12 +66,20 @@ export const RecommendationList: React.FC = () => {
   const [tempFilterSelections, setTempFilterSelections] = useState<{[key: string]: string[]}>({});
   const [searchFilters, setSearchFilters] = useState<{[key: string]: string}>({});
 
+  // Helper function to get client duration
+  const getClientDuration = (clientName: string): string | null => {
+    // Find the client by name
+    const client = clients.find(c => c.name === clientName);
+    return client?.metrics?.duration || null;
+  };
+
   // Filter Options
   const publisherOptions = ['ZipRecruiter', 'Monster', 'Snagajob', 'Indeed', 'LinkedIn', 'Glassdoor', 'CareerBuilder', 'AngelList'];
   const statusOptions = ['Pending', 'Accepted', 'Partially accepted', 'Rejected', 'Sent', 'Expired'];
   const requestTypeOptions = ['CSE Requested', 'Publisher Requested'];
   const recommendationLevelOptions = ['Client', 'Campaign', 'Job Group'];
   const dateOptions = ['Today', 'Yesterday', 'This week', 'Last week', 'This month', 'Last month', 'Last 30 days'];
+  const recommendationDurationOptions = ['This Month', 'Next Month'];
   
      // Get available filter types (exclude already applied ones)
    const getAvailableFilterTypes = () => {
@@ -76,7 +90,8 @@ export const RecommendationList: React.FC = () => {
        { id: 'status', label: 'Status' },
        { id: 'requestType', label: 'Request Type' },
        { id: 'recommendationLevel', label: 'Recommendation Level' },
-       { id: 'date', label: 'Requested Date' }
+       { id: 'date', label: 'Requested Date' },
+       { id: 'recommendationDuration', label: 'Recommendation Duration' }
      ];
      return allTypes.filter(type => !appliedTypes.includes(type.id as any));
    };
@@ -366,6 +381,40 @@ export const RecommendationList: React.FC = () => {
             });
           }
           break;
+        case 'recommendationDuration':
+          // Filter by recommendation duration (This Month, Next Month)
+          if (filter.values.length > 0) {
+            const durationValue = filter.values[0];
+            const now = new Date();
+            let startDate: Date;
+            let endDate: Date;
+            
+            switch (durationValue) {
+              case 'This Month':
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              case 'Next Month':
+                startDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+                
+              default:
+                // If no match, skip filtering
+                return;
+            }
+            
+            filtered = filtered.filter(rec => {
+              // Assuming recommendations have a duration field or we filter by requested date
+              // For now, filtering by requested date as a proxy for duration
+              const requestedDate = new Date(rec.requestedAt);
+              return requestedDate >= startDate && requestedDate <= endDate;
+            });
+          }
+          break;
       }
     });
 
@@ -451,11 +500,45 @@ export const RecommendationList: React.FC = () => {
   };
 
   const handleAcceptAll = (recommendationId: string) => {
-    updateRecommendationStatus(recommendationId, 'Accepted');
+    const recommendation = recommendations.find(rec => rec.id === recommendationId);
+    if (recommendation) {
+      setSelectedRecommendation(recommendation);
+      setShowAcceptAllWarningModal(true);
+    }
+  };
+
+  const handleAcceptAllConfirm = () => {
+    if (selectedRecommendation) {
+      updateRecommendationStatus(selectedRecommendation.id, 'Accepted');
+      setShowAcceptAllWarningModal(false);
+      setSelectedRecommendation(null);
+      
+      // Show success toast
+      setShowToast(true);
+      setToastMessage('All recommendations accepted successfully');
+      setTimeout(() => setShowToast(false), 3000);
+    }
   };
 
   const handleReject = (recommendationId: string) => {
-    updateRecommendationStatus(recommendationId, 'Rejected');
+    const recommendation = recommendations.find(rec => rec.id === recommendationId);
+    if (recommendation) {
+      setSelectedRecommendation(recommendation);
+      setShowRejectAllModal(true);
+    }
+  };
+
+  const handleRejectConfirm = (_rejectionReasons: Record<string, string>) => {
+    if (selectedRecommendation) {
+      updateRecommendationStatus(selectedRecommendation.id, 'Rejected');
+      setShowRejectAllModal(false);
+      setSelectedRecommendation(null);
+      
+      // Show success toast
+      setShowToast(true);
+      setToastMessage('Recommendation rejected successfully');
+      setTimeout(() => setShowToast(false), 3000);
+    }
   };
 
   const formatCurrency = (value: number | undefined) => {
@@ -468,7 +551,7 @@ export const RecommendationList: React.FC = () => {
     if (filterType === 'date') {
       const selections = tempFilterSelections[filterType] || [];
       
-      return (
+    return (
         <div className="w-full bg-white border border-gray-200 rounded-12 shadow-xl overflow-hidden">
           <div className="p-16">
             <h4 className="text-14 font-semibold text-gray-900 mb-12">Select Date Range</h4>
@@ -521,6 +604,67 @@ export const RecommendationList: React.FC = () => {
               </button>
             </div>
           </div>
+      </div>
+    );
+  }
+
+    // Special handling for recommendation duration filter (radio buttons)
+    if (filterType === 'recommendationDuration') {
+      const selections = tempFilterSelections[filterType] || [];
+
+  return (
+        <div className="w-full bg-white border border-gray-200 rounded-12 shadow-xl overflow-hidden">
+          <div className="p-16">
+            <h4 className="text-14 font-semibold text-gray-900 mb-12">Select Recommendation Duration</h4>
+            
+            <div className="space-y-8">
+              {recommendationDurationOptions.map((option) => (
+                <div key={option} className="flex items-center">
+                  <input
+                    type="radio"
+                    id={`duration-${option}`}
+                    name="recommendationDuration"
+                    value={option}
+                    checked={selections.includes(option)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTempFilterSelections({
+                          ...tempFilterSelections,
+                          [filterType]: [option]
+                        });
+                      }
+                    }}
+                    className="h-16 w-16 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor={`duration-${option}`} className="ml-8 text-14 text-gray-700 cursor-pointer">
+                    {option}
+                  </label>
+                </div>
+              ))}
+        </div>
+
+            <div className="flex justify-end gap-8 mt-16 pt-16 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setShowFilterDropdown(null);
+                  setTempFilterSelections({
+                    ...tempFilterSelections,
+                    [filterType]: []
+                  });
+                }}
+                className="px-16 py-8 text-14 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => applyFilter('recommendationDuration')}
+                disabled={selections.length === 0}
+                className="px-16 py-8 bg-primary-600 text-white text-14 rounded-6 hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
         </div>
       );
     }
@@ -566,18 +710,18 @@ export const RecommendationList: React.FC = () => {
            <div className="px-16 py-12 border-b border-gray-100 bg-gray-50">
              <div className="flex items-center gap-8 px-12 py-8 bg-white border border-gray-200 rounded-8">
                <Search size={16} className="text-gray-400 flex-shrink-0" />
-               <input
-                 type="text"
+              <input
+                type="text"
                  placeholder={`Search ${filterType}...`}
-                 value={searchTerm}
+                value={searchTerm}
                  onChange={(e) => setSearchFilters({
                    ...searchFilters,
                    [filterType]: e.target.value
                  })}
                  className="flex-1 bg-transparent text-14 text-gray-900 placeholder-gray-500 border-none outline-none"
-               />
-             </div>
-           </div>
+              />
+            </div>
+          </div>
          )}
          
          <div className="max-h-280 overflow-y-auto">
@@ -606,8 +750,8 @@ export const RecommendationList: React.FC = () => {
                  </div>
                ))
              )}
-           </div>
-         </div>
+          </div>
+        </div>
 
          <div className="flex justify-end gap-12 p-16 border-t border-gray-100 bg-gray-50">
            <button
@@ -629,20 +773,20 @@ export const RecommendationList: React.FC = () => {
      );
    };
 
-  return (
+                return (
     <>
       {/* Recommendations Content Header */}
       <div className="p-24">
                   <div className="flex items-center gap-12 mb-20">
             <div className="w-40 h-40 bg-indigo-100 rounded-8 flex items-center justify-center">
             <TrendingUp className="w-20 h-20 text-indigo-600" />
-          </div>
+                        </div>
           <div>
             <h1 className="text-18 font-semibold text-gray-900 mb-2">Recommendations</h1>
             <p className="text-14 text-gray-600">Request optimization recommendations from publishers or review received suggestions for your campaigns.</p>
           </div>
-        </div>
-
+                      </div>
+                      
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-200 mb-16">
           <button
@@ -665,8 +809,8 @@ export const RecommendationList: React.FC = () => {
           >
             Request Recommendations
           </button>
-        </div>
-      </div>
+                        </div>
+                    </div>
 
       {/* Tab Content */}
       {activeTab === 'logs' ? (
@@ -676,7 +820,7 @@ export const RecommendationList: React.FC = () => {
             <div className="border-b border-gray-200 px-24 py-16">
               <h2 className="text-16 font-medium text-gray-900 mb-4">Recommendation Logs</h2>
               <p className="text-14 text-gray-600">Track all recommendation-related emails, including pending, sent, and expired communications.</p>
-            </div>
+                          </div>
 
             {/* Compact Search Bar */}
             <div className="mb-12 px-20 pt-12">
@@ -690,8 +834,8 @@ export const RecommendationList: React.FC = () => {
                   className="w-full pl-32 pr-10 py-8 border border-gray-300 rounded-6 text-13 text-gray-900 placeholder-gray-500 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
               />
             </div>
-          </div>
-          
+                        </div>
+                        
                          {/* Enhanced Filter System */}
              <div className="px-20 mb-16 pt-8">
                {/* Filter Header with Icon and Clear All */}
@@ -702,10 +846,10 @@ export const RecommendationList: React.FC = () => {
                    {appliedFilters.length > 0 && (
                      <span className="inline-flex items-center px-6 py-2 bg-gray-100 text-gray-600 text-11 font-medium rounded-full">
                        {appliedFilters.length} active
-                     </span>
+                            </span>
                    )}
-        </div>
-
+                          </div>
+                          
                  {/* Clear All Button - Always visible */}
                  <button
                    onClick={() => setAppliedFilters([])}
@@ -751,7 +895,7 @@ export const RecommendationList: React.FC = () => {
                            </div>
                          </>
                        )}
-                      </div>
+                              </div>
                    </Tooltip>
                  ))}
 
@@ -785,14 +929,14 @@ export const RecommendationList: React.FC = () => {
                            {getAvailableFilterTypes().length === 0 && (
                              <div className="px-16 py-12 text-14 text-gray-500 text-center">
                                All filters applied
-                             </div>
-                           )}
-                         </div>
-                       </div>
+                            </div>
+                      )}
+                          </div>
+                        </div>
                      </>
                    )}
-                 </div>
-                        
+                      </div>
+
                  {/* Filter Dropdowns - Popover Overlay (only for new filters) */}
                  {showFilterDropdown && !editingFilterId && (
                    <>
@@ -806,19 +950,19 @@ export const RecommendationList: React.FC = () => {
                      <div className="fixed inset-0 z-50 flex items-center justify-center p-16">
                        <div className="w-full max-w-sm">
                          {renderFilterDropdown(showFilterDropdown)}
-                       </div>
+                          </div>
                      </div>
                    </>
                  )}
                </div>
-                          </div>
-                          
+                        </div>
+                        
                         {/* Modern Expandable Recommendations List */}
             <div className="px-24 pb-24">
               {isLoading ? (
                 <div className="text-center py-40">
                   <div className="text-16 text-gray-500">Loading recommendations...</div>
-                </div>
+                          </div>
               ) : paginatedRecommendations.length === 0 ? (
                 <div className="text-center py-40">
                   <div className="text-16 text-gray-500 mb-8">No recommendations found</div>
@@ -847,12 +991,12 @@ export const RecommendationList: React.FC = () => {
                                   ) : (
                                     <ChevronRight size={16} className="text-gray-400" />
                                   )}
-                                </div>
+                              </div>
                                 <EntityTypeBadge type={rec.entityType} />
                                 <h3 className="text-14 font-semibold text-dark-grey">
                                   {rec.entityName}
                                 </h3>
-                              </div>
+                            </div>
                               
                               {/* Badge Row */}
                               <div className="flex items-center gap-12 mb-8">
@@ -865,20 +1009,20 @@ export const RecommendationList: React.FC = () => {
                                   <span className="joveo-badge bg-orange-50 text-orange-600 border border-orange-200">
                                     <AlertTriangle size={10} />
                                     Expiring Soon
-                                  </span>
+                              </span>
                                 )}
                                 <span className="text-11 text-gray-500">
                                   {new Date(rec.requestedAt).toLocaleDateString()}
                                 </span>
-                              </div>
+                          </div>
                               
                               {/* Metrics Summary */}
                               <div className="text-12 text-gray-600">
                                 {rec.metrics.filter(m => m.recommendedValue !== undefined).length} metrics • 
                                 {rec.metrics.filter(m => m.isRequested).length} requested
-                              </div>
-                            </div>
-                            
+                        </div>
+                      </div>
+
                             {/* Actions */}
                             <div className="flex items-center gap-6 ml-12">
                               {rec.status === 'Pending' && !checkExpired(rec.requestedAt) && (
@@ -924,7 +1068,7 @@ export const RecommendationList: React.FC = () => {
                                           className="flex items-center gap-8 w-full px-12 py-6 text-12 font-medium text-red-700 hover:bg-red-50 transition-colors"
                                         >
                                           <X size={12} />
-                                          Reject
+                                          Reject All
                                         </button>
                           </div>
                         </div>
@@ -939,6 +1083,31 @@ export const RecommendationList: React.FC = () => {
                         {isExpanded && (
                           <div className="bg-primary-lighter border-t border-gray-200">
                             <div className="px-16 py-12">
+                              {/* Priority and Duration Info */}
+                              <div className="mb-12 flex items-center gap-16">
+                                {rec.priority && (
+                                  <div className="flex items-center gap-6">
+                                    <span className="text-11 font-semibold text-gray-600 uppercase tracking-wide">Priority:</span>
+                                    <span className={`px-8 py-2 rounded-4 text-11 font-medium ${
+                                      rec.priority === 'Urgent' ? 'bg-red-50 text-red-600 border border-red-200' :
+                                      rec.priority === 'High' ? 'bg-orange-50 text-orange-600 border border-orange-200' :
+                                      rec.priority === 'Medium' ? 'bg-yellow-50 text-yellow-600 border border-yellow-200' :
+                                      'bg-gray-50 text-gray-600 border border-gray-200'
+                                    }`}>
+                                      {rec.priority}
+                            </span>
+                                  </div>
+                                )}
+                                {rec.duration && (
+                                  <div className="flex items-center gap-6">
+                                    <span className="text-11 font-semibold text-gray-600 uppercase tracking-wide">Duration:</span>
+                                    <span className="px-8 py-2 rounded-4 text-11 font-medium bg-blue-50 text-blue-600 border border-blue-200">
+                                      {rec.duration}
+                                    </span>
+                                  </div>
+                                )}
+                          </div>
+                          
                               <div className="overflow-hidden">
                                 <table className="w-full">
                                   <thead>
@@ -988,7 +1157,7 @@ export const RecommendationList: React.FC = () => {
                                               <div className="flex items-center gap-6">
                                                 <span className="text-12 font-medium text-dark-grey">
                                                   {metric.type}
-                                                </span>
+                              </span>
                                                 {metric.isRequested && (
                                                   <span className="joveo-badge-sm bg-blue-50 text-blue-600 border border-blue-200">
                                                     Requested
@@ -997,7 +1166,14 @@ export const RecommendationList: React.FC = () => {
                                               </div>
                                             </td>
                                             <td className="py-8 px-12 text-right text-12 font-medium text-dark-grey">
-                                              {formatCurrency(metric.currentValue)}
+                                              <div className="flex items-center justify-end gap-4">
+                                                <span>{formatCurrency(metric.currentValue)}</span>
+                                                {metric.type === 'Budget' && getClientDuration(rec.clientName) && (
+                                                  <span className="text-10 text-gray-500 bg-gray-100 px-4 py-1 rounded-2">
+                                                    {getClientDuration(rec.clientName)}
+                                                  </span>
+                                                )}
+                                              </div>
                                             </td>
                                             {rec.status !== 'Sent' && (
                                               <>
@@ -1015,7 +1191,7 @@ export const RecommendationList: React.FC = () => {
                                                         <ChevronDown size={12} />
                                                       )}
                                                       {change.direction === 'increase' ? '+' : ''}{change.percentage}%
-                                                    </div>
+                              </div>
                                                   )}
                                                 </td>
                                               </>
@@ -1038,7 +1214,7 @@ export const RecommendationList: React.FC = () => {
                                                   <span className="joveo-badge-sm bg-red-50 text-red-600 border border-red-200">
                                                     <X size={10} className="mr-2" />
                                                     Rejected
-                                                  </span>
+                              </span>
                                                 ) : (
                                                   <span className="joveo-badge-sm bg-gray-50 text-gray-600 border border-gray-200">
                                                     Pending
@@ -1059,15 +1235,15 @@ export const RecommendationList: React.FC = () => {
                                     <div className="flex items-start gap-8">
                                       <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center flex-shrink-0 mt-1">
                                         <MessageSquare size={10} className="text-primary-main" />
-                                      </div>
+                            </div>
                                       <div className="flex-1">
                                         <div className="text-11 font-semibold text-dark-grey mb-4">Publisher Note:</div>
                                         <div className="text-12 text-gray-700 leading-relaxed">{rec.notes}</div>
-                                      </div>
-                                    </div>
-                                  </div>
+                          </div>
+                        </div>
+                      </div>
                                 )}
-                              </div>
+                    </div>
                             </div>
                       </div>
                     )}
@@ -1146,11 +1322,11 @@ export const RecommendationList: React.FC = () => {
                   >
                     ›
                     </button>
-                  </div>
                 </div>
-              )}
+              </div>
+            )}
             </div>
-          </Card>
+      </Card>
               </div>
       ) : (
         <RequestRecommendationForm />
@@ -1160,7 +1336,7 @@ export const RecommendationList: React.FC = () => {
        {showPartialAcceptModal && selectedRecommendation && (
         <PartialAcceptModal
            onClose={() => setShowPartialAcceptModal(false)}
-           onAccept={(selectedMetrics, rejectionReasons) => {
+           onAccept={(_selectedMetrics, _rejectionReasons) => {
              updateRecommendationStatus(selectedRecommendation.id, 'Partially accepted');
              setShowPartialAcceptModal(false);
            }}
@@ -1179,6 +1355,118 @@ export const RecommendationList: React.FC = () => {
             }
           }}
         />
+      )}
+
+      {/* Reject All Modal */}
+      {showRejectAllModal && selectedRecommendation && (
+        <RejectAllModal
+          onClose={() => {
+            setShowRejectAllModal(false);
+            setSelectedRecommendation(null);
+          }}
+          onReject={handleRejectConfirm}
+          metrics={{
+            cpc: {
+              currentValue: 2.50,
+              recommendedValue: 3.25
+            },
+            cpa: {
+              currentValue: 45.00,
+              recommendedValue: 38.50
+            },
+            budget: {
+              currentValue: 15000,
+              recommendedValue: 18000
+            }
+          }}
+        />
+      )}
+
+      {/* Accept All Warning Modal */}
+      {showAcceptAllWarningModal && selectedRecommendation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-16 z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="px-24 py-20 border-b border-slate-200 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
+              <h2 className="subtitle1-semibold text-slate-900">Accept All Recommendations</h2>
+              <button
+                onClick={() => {
+                  setShowAcceptAllWarningModal(false);
+                  setSelectedRecommendation(null);
+                }}
+                className="text-slate-400 hover:text-slate-500 transition-colors p-4 rounded-md hover:bg-slate-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="px-24 py-24">
+              <div className="flex items-start gap-16 mb-20">
+                <div className="w-40 h-40 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-20 h-20 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-16 font-semibold text-slate-900 mb-8">
+                    Review Before Accepting
+                  </h3>
+                  <p className="text-14 text-slate-600 leading-relaxed">
+                    Please review the publisher's recommended metrics before accepting. 
+                    Make sure you understand the changes and their potential impact on your campaign performance.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-16">
+                <div className="flex items-start gap-8">
+                  <AlertTriangle className="w-16 h-16 text-amber-600 mt-2 flex-shrink-0" />
+                  <div className="text-14 text-amber-800">
+                    <strong>Tip:</strong> Click on the recommendation row to expand and view detailed CSE vs PUB values before proceeding.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-24 py-20 bg-gray-50 rounded-b-xl border-t border-gray-200 flex justify-end gap-12">
+              <button
+                onClick={handleAcceptAllConfirm}
+                className="px-20 py-12 text-14 font-medium text-gray-700 bg-white border border-gray-300 rounded-8 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+              >
+                Accept All
+              </button>
+              <button
+                onClick={() => {
+                  // Expand the row to show metrics
+                  setExpandedRows(prev => new Set(prev).add(selectedRecommendation.id));
+                  setShowAcceptAllWarningModal(false);
+                  setSelectedRecommendation(null);
+                }}
+                className="flex items-center gap-8 px-20 py-12 text-14 font-medium text-white bg-green-600 hover:bg-green-700 rounded-8 transition-all duration-200"
+              >
+                <MessageSquare size={14} />
+                Review
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed inset-0 flex items-end justify-center z-50 pointer-events-none" style={{ left: '248px' }}>
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 pointer-events-auto">
+            <div className="flex items-center gap-12 px-12 py-8 rounded-4 shadow-lg border bg-green-50 border-green-200 text-green-800">
+              <div className="w-20 h-20 flex items-center justify-center">
+                <Check size={12} className="text-green-600" />
+              </div>
+              <span className="text-12 font-normal">{toastMessage}</span>
+              <button
+                onClick={() => setShowToast(false)}
+                className="w-20 h-20 flex items-center justify-center rounded-full hover:bg-white/50 transition-colors"
+              >
+                <X size={10} className="text-gray-600" />
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

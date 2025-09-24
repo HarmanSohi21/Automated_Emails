@@ -62,54 +62,54 @@ export const instances: Instance[] = [
     id: 'adecco',
     name: 'Adecco',
     clients: [
-      { id: 'adecco-brazil', name: 'Adecco Brazil', poc: [{ name: 'Carlos Silva', email: 'carlos@adecco.br', role: 'Account Manager' }], metrics: { budget: 50000, cpcBid: 2.5, cpaGoal: 45 } },
-      { id: 'adecco-france', name: 'Adecco France', poc: [{ name: 'Marie Dubois', email: 'marie@adecco.fr', role: 'Regional Director' }], metrics: { budget: 75000, cpcBid: 3.2, cpaGoal: 52 } },
-      { id: 'adecco-germany', name: 'Adecco Germany', poc: [{ name: 'Hans Mueller', email: 'hans@adecco.de', role: 'Operations Lead' }], metrics: { budget: 80000, cpcBid: 3.8, cpaGoal: 58 } },
-      { id: 'adecco-mexico', name: 'Adecco Mexico', poc: [{ name: 'Sofia Rodriguez', email: 'sofia@adecco.mx', role: 'Country Manager' }], metrics: { budget: 35000, cpcBid: 2.1, cpaGoal: 38 } },
-      { id: 'adecco-switzerland', name: 'Adecco Switzerland', poc: [{ name: 'Peter Zimmermann', email: 'peter@adecco.ch', role: 'Regional Head' }], metrics: { budget: 95000, cpcBid: 4.2, cpaGoal: 65 } }
+      { id: 'adecco-brazil', name: 'Adecco Brazil', poc: [{ name: 'Carlos Silva', email: 'carlos@adecco.br', role: 'Account Manager' }], metrics: { budget: 50000, cpcBid: 2.5, cpaGoal: 45, duration: 'Monthly' } },
+      { id: 'adecco-france', name: 'Adecco France', poc: [{ name: 'Marie Dubois', email: 'marie@adecco.fr', role: 'Regional Director' }], metrics: { budget: 75000, cpcBid: 3.2, cpaGoal: 52, duration: 'Monthly' } },
+      { id: 'adecco-germany', name: 'Adecco Germany', poc: [{ name: 'Hans Mueller', email: 'hans@adecco.de', role: 'Operations Lead' }], metrics: { budget: 80000, cpcBid: 3.8, cpaGoal: 58, duration: 'Monthly' } },
+      { id: 'adecco-mexico', name: 'Adecco Mexico', poc: [{ name: 'Sofia Rodriguez', email: 'sofia@adecco.mx', role: 'Country Manager' }], metrics: { budget: 35000, cpcBid: 2.1, cpaGoal: 38, duration: 'Weekly' } },
+      { id: 'adecco-switzerland', name: 'Adecco Switzerland', poc: [{ name: 'Peter Zimmermann', email: 'peter@adecco.ch', role: 'Regional Head' }], metrics: { budget: 95000, cpcBid: 4.2, cpaGoal: 65, duration: 'Monthly' } }
     ]
   },
   {
     id: 'ashley-furniture',
     name: 'Ashley Furniture',
     clients: [
-      { id: 'ashley-furniture-main', name: 'Ashley Furniture', poc: [{ name: 'John Anderson', email: 'john@ashleyfurniture.com', role: 'HR Director' }], metrics: { budget: 120000, cpcBid: 2.8, cpaGoal: 48 } }
+      { id: 'ashley-furniture-main', name: 'Ashley Furniture', poc: [{ name: 'John Anderson', email: 'john@ashleyfurniture.com', role: 'HR Director' }], metrics: { budget: 120000, cpcBid: 2.8, cpaGoal: 48, duration: 'Monthly' } }
     ]
   },
   {
     id: 'geico',
     name: 'Geico',
     clients: [
-      { id: 'geico-main', name: 'Geico', poc: [{ name: 'Sarah Wilson', email: 'sarah@geico.com', role: 'Talent Acquisition Manager' }], metrics: { budget: 200000, cpcBid: 3.5, cpaGoal: 55 } }
+      { id: 'geico-main', name: 'Geico', poc: [{ name: 'Sarah Wilson', email: 'sarah@geico.com', role: 'Talent Acquisition Manager' }], metrics: { budget: 200000, cpcBid: 3.5, cpaGoal: 55, duration: 'Monthly' } }
     ]
   },
   {
     id: 'managed-services',
     name: 'Managed Services',
     clients: [
-      { id: 'dwa-northrup-grumman', name: 'DWA - Northrup Grumman', poc: [{ name: 'Michael Chen', email: 'michael@dwa.com', role: 'Defense Recruiting Lead' }], metrics: { budget: 300000, cpcBid: 5.2, cpaGoal: 85 } }
+      { id: 'dwa-northrup-grumman', name: 'DWA - Northrup Grumman', poc: [{ name: 'Michael Chen', email: 'michael@dwa.com', role: 'Defense Recruiting Lead' }], metrics: { budget: 300000, cpcBid: 5.2, cpaGoal: 85, duration: 'Monthly' } }
     ]
   },
   {
     id: 'rsr',
     name: 'RSR',
     clients: [
-      { id: 'rsr-main', name: 'RSR', poc: [{ name: 'David Kim', email: 'david@rsr.com', role: 'Supply Chain Recruiter' }], metrics: { budget: 85000, cpcBid: 2.9, cpaGoal: 42 } }
+      { id: 'rsr-main', name: 'RSR', poc: [{ name: 'David Kim', email: 'david@rsr.com', role: 'Supply Chain Recruiter' }], metrics: { budget: 85000, cpcBid: 2.9, cpaGoal: 42, duration: 'Weekly' } }
     ]
   },
   {
     id: 'uber',
     name: 'Uber',
     clients: [
-      { id: 'ubereats', name: 'UberEats', poc: [{ name: 'Amanda Lee', email: 'amanda@uber.com', role: 'UberEats Hiring Manager' }], metrics: { budget: 180000, cpcBid: 4.1, cpaGoal: 68 } },
-      { id: 'uber-freight', name: 'Uber Freight', poc: [{ name: 'Robert Johnson', email: 'robert@uber.com', role: 'Freight Operations' }], metrics: { budget: 150000, cpcBid: 3.6, cpaGoal: 58 } },
-      { id: 'uber-main', name: 'Uber', poc: [{ name: 'Jennifer Davis', email: 'jennifer@uber.com', role: 'Global Talent Acquisition' }], metrics: { budget: 250000, cpcBid: 4.8, cpaGoal: 78 } },
-      { id: 'uber-delivery', name: 'UberDelivery', poc: [{ name: 'Kevin Park', email: 'kevin@uber.com', role: 'Delivery Operations Manager' }], metrics: { budget: 60000, cpcBid: 3.2, cpaGoal: 52 } },
-      { id: 'uber-logistics', name: 'UberLogistics', poc: [{ name: 'Lisa Thompson', email: 'lisa@uber.com', role: 'Logistics Recruiter' }], metrics: { budget: 40000, cpcBid: 2.4, cpaGoal: 35 } },
-      { id: 'uber-business', name: 'UberBusiness', poc: [{ name: 'Mark Robinson', email: 'mark@uber.com', role: 'Business Solutions Lead' }], metrics: { budget: 75000, cpcBid: 2.7, cpaGoal: 44 } },
-      { id: 'uber-corporate', name: 'UberCorporate', poc: [{ name: 'Zhang Wei', email: 'zhang@uber.com', role: 'Corporate Talent Acquisition' }], metrics: { budget: 95000, cpcBid: 3.4, cpaGoal: 56 } },
-      { id: 'uberexchange', name: 'UberExchange', poc: [{ name: 'Ryan Martinez', email: 'ryan@uber.com', role: 'Exchange Platform Lead' }], metrics: { budget: 70000, cpcBid: 3.1, cpaGoal: 49 } },
-      { id: 'uberdrivers', name: 'UberDrivers', poc: [{ name: 'Nicole Brown', email: 'nicole@uber.com', role: 'Driver Acquisition Manager' }], metrics: { budget: 130000, cpcBid: 3.9, cpaGoal: 62 } }
+      { id: 'ubereats', name: 'UberEats', poc: [{ name: 'Amanda Lee', email: 'amanda@uber.com', role: 'UberEats Hiring Manager' }], metrics: { budget: 180000, cpcBid: 4.1, cpaGoal: 68, duration: 'Monthly' } },
+      { id: 'uber-freight', name: 'Uber Freight', poc: [{ name: 'Robert Johnson', email: 'robert@uber.com', role: 'Freight Operations' }], metrics: { budget: 150000, cpcBid: 3.6, cpaGoal: 58, duration: 'Monthly' } },
+      { id: 'uber-main', name: 'Uber', poc: [{ name: 'Jennifer Davis', email: 'jennifer@uber.com', role: 'Global Talent Acquisition' }], metrics: { budget: 250000, cpcBid: 4.8, cpaGoal: 78, duration: 'Monthly' } },
+      { id: 'uber-delivery', name: 'UberDelivery', poc: [{ name: 'Kevin Park', email: 'kevin@uber.com', role: 'Delivery Operations Manager' }], metrics: { budget: 60000, cpcBid: 3.2, cpaGoal: 52, duration: 'Weekly' } },
+      { id: 'uber-logistics', name: 'UberLogistics', poc: [{ name: 'Lisa Thompson', email: 'lisa@uber.com', role: 'Logistics Recruiter' }], metrics: { budget: 40000, cpcBid: 2.4, cpaGoal: 35, duration: 'Daily' } },
+      { id: 'uber-business', name: 'UberBusiness', poc: [{ name: 'Mark Robinson', email: 'mark@uber.com', role: 'Business Solutions Lead' }], metrics: { budget: 75000, cpcBid: 2.7, cpaGoal: 44, duration: 'Weekly' } },
+      { id: 'uber-corporate', name: 'UberCorporate', poc: [{ name: 'Zhang Wei', email: 'zhang@uber.com', role: 'Corporate Talent Acquisition' }], metrics: { budget: 95000, cpcBid: 3.4, cpaGoal: 56, duration: 'Monthly' } },
+      { id: 'uberexchange', name: 'UberExchange', poc: [{ name: 'Ryan Martinez', email: 'ryan@uber.com', role: 'Exchange Platform Lead' }], metrics: { budget: 70000, cpcBid: 3.1, cpaGoal: 49, duration: 'Weekly' } },
+      { id: 'uberdrivers', name: 'UberDrivers', poc: [{ name: 'Nicole Brown', email: 'nicole@uber.com', role: 'Driver Acquisition Manager' }], metrics: { budget: 130000, cpcBid: 3.9, cpaGoal: 62, duration: 'Monthly' } }
     ]
   }
 ];
@@ -128,9 +128,9 @@ const getClientPOCs = (clientName: string): string[] => {
 };
 
 // Generate email template
-const generateEmailTemplate = (clientName: string): EmailTemplate => ({
+const generateEmailTemplate = (clientName: string, entityType: EntityType, entityName: string): EmailTemplate => ({
     clientName,
-  campaignName: `Demo Campaign for ${clientName}`,
+  campaignName: entityType === 'Campaign' ? entityName : `Demo Campaign for ${clientName}`,
   campaignObjective: 'Increase qualified applications',
   feedUrl: `https://feeds.example.com/${clientName.toLowerCase().replace(/\s+/g, '')}/jobs.xml`,
   budget: Math.floor(Math.random() * 100000) + 10000,
@@ -149,7 +149,9 @@ const generateEmailTemplate = (clientName: string): EmailTemplate => ({
   sampleLandingPage: `https://careers.${clientName.toLowerCase().replace(/\s+/g, '')}.com`,
   note: 'Demo note for testing',
   partnerInsightsUrl: 'https://insights.joveo.com',
-  isEasyApply: true
+  isEasyApply: true,
+  entityType,
+  entityName
 });
 
 // Generate Entity
@@ -190,14 +192,18 @@ const generateEmailNotification = (
     clientName: entity.clientName,
     publisherId: publisher.id,
     publisherName: publisher.name,
-    subject: `New ${entity.type} setup for ${entity.clientName} - ${entity.name}`,
+    subject: entity.type === 'Client' 
+      ? `New Client Onboarding - ${entity.name} - Request for Feed Indexing & Goal Validation`
+      : entity.type === 'Campaign'
+      ? `New Campaign Setup for ${entity.clientName} – ${entity.name}`
+      : `New Job Group Setup for ${entity.clientName} – ${entity.name}`,
     recipients: [...publisher.email, ...clientPOCs],
     status,
     triggerType,
     createdAt,
     sentAt: status === 'Sent' ? new Date(Date.now() - createdAtOffset).toISOString() : undefined,
     errorMessage: status === 'Failed' ? 'Network connection timeout' : undefined,
-    template: generateEmailTemplate(entity.clientName)
+    template: generateEmailTemplate(entity.clientName, entity.type, entity.name)
   };
 };
 
@@ -558,27 +564,27 @@ export const mockRecommendations: Recommendation[] = [
 
 // Mock Campaigns and Job Groups for RequestRecommendationForm
 export const mockCampaigns = [
-  { id: 'camp-1', name: 'Software Engineering Campaign', clientId: 'adecco-brazil', clientName: 'Adecco Brazil', metrics: { budget: 25000, cpcBid: 3.25, cpaGoal: 85.00 } },
-  { id: 'camp-2', name: 'Marketing Campaign', clientId: 'adecco-france', clientName: 'Adecco France', metrics: { budget: 45000, cpcBid: 2.80, cpaGoal: 120.00 } },
-  { id: 'camp-3', name: 'Sales Operations', clientId: 'adecco-germany', clientName: 'Adecco Germany', metrics: { budget: 35000, cpcBid: 4.10, cpaGoal: 95.00 } },
-  { id: 'camp-4', name: 'Customer Support', clientId: 'ashley-furniture-main', clientName: 'Ashley Furniture', metrics: { budget: 18000, cpcBid: 2.45, cpaGoal: 70.00 } },
-  { id: 'camp-5', name: 'Insurance Sales', clientId: 'geico-main', clientName: 'Geico', metrics: { budget: 65000, cpcBid: 5.20, cpaGoal: 150.00 } },
-  { id: 'camp-6', name: 'Defense Technology', clientId: 'dwa-northrup-grumman', clientName: 'DWA - Northrup Grumman', metrics: { budget: 85000, cpcBid: 6.75, cpaGoal: 200.00 } },
-  { id: 'camp-7', name: 'Driver Acquisition', clientId: 'ubereats', clientName: 'UberEats', metrics: { budget: 32000, cpcBid: 3.90, cpaGoal: 110.00 } },
-  { id: 'camp-8', name: 'Freight Logistics', clientId: 'uber-freight', clientName: 'Uber Freight', metrics: { budget: 58000, cpcBid: 4.85, cpaGoal: 175.00 } },
-  { id: 'camp-9', name: 'Tech Innovation', clientId: 'uber-main', clientName: 'Uber', metrics: { budget: 125000, cpcBid: 7.20, cpaGoal: 250.00 } },
-  { id: 'camp-10', name: 'Retail Distribution', clientId: 'rsr-main', clientName: 'RSR', metrics: { budget: 22000, cpcBid: 2.95, cpaGoal: 80.00 } }
+  { id: 'camp-1', name: 'Software Engineering Campaign', clientId: 'adecco-brazil', clientName: 'Adecco Brazil', metrics: { budget: 25000, cpcBid: 3.25, cpaGoal: 85.00, duration: 'Monthly' } },
+  { id: 'camp-2', name: 'Marketing Campaign', clientId: 'adecco-france', clientName: 'Adecco France', metrics: { budget: 45000, cpcBid: 2.80, cpaGoal: 120.00, duration: 'Monthly' } },
+  { id: 'camp-3', name: 'Sales Operations', clientId: 'adecco-germany', clientName: 'Adecco Germany', metrics: { budget: 35000, cpcBid: 4.10, cpaGoal: 95.00, duration: 'Monthly' } },
+  { id: 'camp-4', name: 'Customer Support', clientId: 'ashley-furniture-main', clientName: 'Ashley Furniture', metrics: { budget: 18000, cpcBid: 2.45, cpaGoal: 70.00, duration: 'Monthly' } },
+  { id: 'camp-5', name: 'Insurance Sales', clientId: 'geico-main', clientName: 'Geico', metrics: { budget: 65000, cpcBid: 5.20, cpaGoal: 150.00, duration: 'Monthly' } },
+  { id: 'camp-6', name: 'Defense Technology', clientId: 'dwa-northrup-grumman', clientName: 'DWA - Northrup Grumman', metrics: { budget: 85000, cpcBid: 6.75, cpaGoal: 200.00, duration: 'Monthly' } },
+  { id: 'camp-7', name: 'Driver Acquisition', clientId: 'ubereats', clientName: 'UberEats', metrics: { budget: 32000, cpcBid: 3.90, cpaGoal: 110.00, duration: 'Monthly' } },
+  { id: 'camp-8', name: 'Freight Logistics', clientId: 'uber-freight', clientName: 'Uber Freight', metrics: { budget: 58000, cpcBid: 4.85, cpaGoal: 175.00, duration: 'Monthly' } },
+  { id: 'camp-9', name: 'Tech Innovation', clientId: 'uber-main', clientName: 'Uber', metrics: { budget: 125000, cpcBid: 7.20, cpaGoal: 250.00, duration: 'Monthly' } },
+  { id: 'camp-10', name: 'Retail Distribution', clientId: 'rsr-main', clientName: 'RSR', metrics: { budget: 22000, cpcBid: 2.95, cpaGoal: 80.00, duration: 'Weekly' } }
 ];
 
 export const mockJobGroups = [
-  { id: 'jg-1', name: 'Engineering Team', clientId: 'adecco-brazil', clientName: 'Adecco Brazil', metrics: { budget: 15000, cpcBid: 2.85, cpaGoal: 65.00 } },
-  { id: 'jg-2', name: 'Finance Department', clientId: 'adecco-france', clientName: 'Adecco France', metrics: { budget: 28000, cpcBid: 3.40, cpaGoal: 90.00 } },
-  { id: 'jg-3', name: 'Business Development', clientId: 'adecco-germany', clientName: 'Adecco Germany', metrics: { budget: 42000, cpcBid: 4.20, cpaGoal: 125.00 } },
-  { id: 'jg-4', name: 'Warehouse Management', clientId: 'ashley-furniture-main', clientName: 'Ashley Furniture', metrics: { budget: 12000, cpcBid: 2.10, cpaGoal: 55.00 } },
-  { id: 'jg-5', name: 'Claims Processing', clientId: 'geico-main', clientName: 'Geico', metrics: { budget: 38000, cpcBid: 4.60, cpaGoal: 115.00 } },
-  { id: 'jg-6', name: 'Cybersecurity Operations', clientId: 'dwa-northrup-grumman', clientName: 'DWA - Northrup Grumman', metrics: { budget: 72000, cpcBid: 6.15, cpaGoal: 185.00 } },
-  { id: 'jg-7', name: 'Restaurant Partnerships', clientId: 'ubereats', clientName: 'UberEats', metrics: { budget: 19500, cpcBid: 3.15, cpaGoal: 75.00 } },
-  { id: 'jg-8', name: 'Fleet Management', clientId: 'uber-freight', clientName: 'Uber Freight', metrics: { budget: 48000, cpcBid: 4.95, cpaGoal: 145.00 } },
-  { id: 'jg-9', name: 'Global Operations', clientId: 'uber-main', clientName: 'Uber', metrics: { budget: 95000, cpcBid: 6.80, cpaGoal: 220.00 } },
-  { id: 'jg-10', name: 'Supply Chain', clientId: 'rsr-main', clientName: 'RSR', metrics: { budget: 16500, cpcBid: 2.65, cpaGoal: 70.00 } }
+  { id: 'jg-1', name: 'Engineering Team', clientId: 'adecco-brazil', clientName: 'Adecco Brazil', metrics: { budget: 15000, cpcBid: 2.85, cpaGoal: 65.00, duration: 'Weekly' } },
+  { id: 'jg-2', name: 'Finance Department', clientId: 'adecco-france', clientName: 'Adecco France', metrics: { budget: 28000, cpcBid: 3.40, cpaGoal: 90.00, duration: 'Weekly' } },
+  { id: 'jg-3', name: 'Business Development', clientId: 'adecco-germany', clientName: 'Adecco Germany', metrics: { budget: 42000, cpcBid: 4.20, cpaGoal: 125.00, duration: 'Weekly' } },
+  { id: 'jg-4', name: 'Warehouse Management', clientId: 'ashley-furniture-main', clientName: 'Ashley Furniture', metrics: { budget: 12000, cpcBid: 2.10, cpaGoal: 55.00, duration: 'Daily' } },
+  { id: 'jg-5', name: 'Claims Processing', clientId: 'geico-main', clientName: 'Geico', metrics: { budget: 38000, cpcBid: 4.60, cpaGoal: 115.00, duration: 'Weekly' } },
+  { id: 'jg-6', name: 'Cybersecurity Operations', clientId: 'dwa-northrup-grumman', clientName: 'DWA - Northrup Grumman', metrics: { budget: 72000, cpcBid: 6.15, cpaGoal: 185.00, duration: 'Monthly' } },
+  { id: 'jg-7', name: 'Restaurant Partnerships', clientId: 'ubereats', clientName: 'UberEats', metrics: { budget: 19500, cpcBid: 3.15, cpaGoal: 75.00, duration: 'Weekly' } },
+  { id: 'jg-8', name: 'Fleet Management', clientId: 'uber-freight', clientName: 'Uber Freight', metrics: { budget: 48000, cpcBid: 4.95, cpaGoal: 145.00, duration: 'Weekly' } },
+  { id: 'jg-9', name: 'Global Operations', clientId: 'uber-main', clientName: 'Uber', metrics: { budget: 95000, cpcBid: 6.80, cpaGoal: 220.00, duration: 'Monthly' } },
+  { id: 'jg-10', name: 'Supply Chain', clientId: 'rsr-main', clientName: 'RSR', metrics: { budget: 16500, cpcBid: 2.65, cpaGoal: 70.00, duration: 'Daily' } }
 ];

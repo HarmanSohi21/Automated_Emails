@@ -11,6 +11,7 @@ import { LoadingSpinner } from '../common/LoadingSpinner';
 import { EmailView } from './EmailView';
 import { Input } from '../common/Input';
 import { Dropdown } from '../common/Dropdown';
+import { SendAllWarningModal } from './SendAllWarningModal';
 import { EmailNotification, FilterChip } from '../../types';
 
 // Enhanced Toast Component (matching Recommendations design)
@@ -79,11 +80,12 @@ export const EmailNotificationList: React.FC = () => {
   const [showEmailView, setShowEmailView] = useState(false);
   const [showAllEmailsView, setShowAllEmailsView] = useState(false);
   const [currentEmailIndex, setCurrentEmailIndex] = useState(0);
-  const [selectedEntityType, setSelectedEntityType] = useState<'Client' | 'Campaign' | 'JobGroup' | null>(null);
+  const [selectedEntityType, setSelectedEntityType] = useState<'Client' | 'Campaign' | 'JobGroup' | null>('Client');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
   const [sendingEmails, setSendingEmails] = useState<Set<string>>(new Set());
+  const [showSendAllWarning, setShowSendAllWarning] = useState(false);
 
   // Check for failed emails and show notification
   useEffect(() => {
@@ -104,6 +106,11 @@ export const EmailNotificationList: React.FC = () => {
       setTimeout(() => setShowToast(false), 5000);
     }
   }, [emailNotifications]);
+
+  // Reset currentEmailIndex when selectedEntityType changes
+  useEffect(() => {
+    setCurrentEmailIndex(0);
+  }, [selectedEntityType]);
 
   // Filter options
   const publisherOptions = ['ZipRecruiter', 'Monster', 'Snagajob', 'Indeed', 'LinkedIn', 'Glassdoor', 'CareerBuilder', 'AngelList'];
@@ -424,20 +431,29 @@ export const EmailNotificationList: React.FC = () => {
     return acc;
   }, {} as Record<string, number>);
   
-  const showBanner = readyNotifications.length > 0;
+  // Filter ready notifications by selected entity type for banner
+  const bannerReadyNotifications = selectedEntityType 
+    ? readyNotifications.filter(email => email.entityType === selectedEntityType)
+    : readyNotifications;
+  
+  const showBanner = bannerReadyNotifications.length > 0;
 
   const handleViewAll = () => {
-    if (readyNotifications.length > 0) {
+    if (bannerReadyNotifications.length > 0) {
     setCurrentEmailIndex(0);
-      setSelectedEmail(readyNotifications[0]);
+      setSelectedEmail(bannerReadyNotifications[0]);
     setShowAllEmailsView(true);
     }
   };
 
-  const handleSendAllReady = async () => {
-    const notificationsToSend = selectedEntityType 
-      ? readyNotifications.filter(email => email.entityType === selectedEntityType)
-      : readyNotifications;
+  const handleSendAllReady = () => {
+    // Show warning modal instead of directly sending
+    setShowSendAllWarning(true);
+  };
+
+  const handleConfirmSendAll = async () => {
+    const notificationsToSend = bannerReadyNotifications;
+    setShowSendAllWarning(false);
 
     try {
       for (const email of notificationsToSend) {
@@ -456,16 +472,16 @@ export const EmailNotificationList: React.FC = () => {
   };
 
   const handleNextEmail = () => {
-    if (currentEmailIndex < readyNotifications.length - 1) {
+    if (currentEmailIndex < bannerReadyNotifications.length - 1) {
       setCurrentEmailIndex(prev => prev + 1);
-      setSelectedEmail(readyNotifications[currentEmailIndex + 1]);
+      setSelectedEmail(bannerReadyNotifications[currentEmailIndex + 1]);
     }
   };
 
   const handlePreviousEmail = () => {
     if (currentEmailIndex > 0) {
       setCurrentEmailIndex(prev => prev - 1);
-      setSelectedEmail(readyNotifications[currentEmailIndex - 1]);
+      setSelectedEmail(bannerReadyNotifications[currentEmailIndex - 1]);
     }
   };
 
@@ -529,7 +545,7 @@ export const EmailNotificationList: React.FC = () => {
   const renderFilterDropdown = (filterType: string) => {
     // Special handling for date filter
     if (filterType === 'date') {
-      return (
+    return (
         <div className="w-full bg-white border border-gray-200 rounded-12 shadow-xl overflow-hidden">
           <div className="p-16">
             <h4 className="text-14 font-semibold text-gray-900 mb-12">Select Date Range</h4>
@@ -576,9 +592,9 @@ export const EmailNotificationList: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
-      );
-    }
+      </div>
+    );
+  }
 
     const selections = tempFilterSelections[filterType] || [];
     const searchTerm = searchFilters[filterType] || '';
@@ -704,7 +720,7 @@ export const EmailNotificationList: React.FC = () => {
               <div>
                 <div className="flex items-center gap-8 mb-1">
                   <span className="text-13 font-semibold text-gray-900">
-                    {readyNotifications.length} email{readyNotifications.length > 1 ? 's are' : ' is'} ready to be sent
+                    {bannerReadyNotifications.length} email{bannerReadyNotifications.length > 1 ? 's are' : ' is'} ready to be sent
                   </span>
                 </div>
                 <div className="flex items-center gap-8">
@@ -728,6 +744,7 @@ export const EmailNotificationList: React.FC = () => {
             <Button
                 variant="secondary"
               onClick={handleViewAll}
+                disabled={bannerReadyNotifications.length === 0}
                 className="px-12 py-6 text-12"
             >
                 <Eye size={14} />
@@ -735,7 +752,7 @@ export const EmailNotificationList: React.FC = () => {
             </Button>
             <Button
               onClick={handleSendAllReady}
-                disabled={sendingEmails.size > 0}
+                disabled={sendingEmails.size > 0 || bannerReadyNotifications.length === 0}
                 className="px-12 py-6 text-12"
             >
                 {sendingEmails.size > 0 ? (
@@ -1043,11 +1060,11 @@ export const EmailNotificationList: React.FC = () => {
                   Previous
                 </button>
                 <span className="text-12 text-gray-600">
-                  {currentEmailIndex + 1} of {readyNotifications.length}
+                  {currentEmailIndex + 1} of {bannerReadyNotifications.length}
                 </span>
                 <button
                   onClick={handleNextEmail}
-                  disabled={currentEmailIndex === readyNotifications.length - 1}
+                  disabled={currentEmailIndex === bannerReadyNotifications.length - 1}
                   className="px-8 py-4 text-12 border border-gray-300 rounded-4 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Next
@@ -1104,6 +1121,15 @@ export const EmailNotificationList: React.FC = () => {
           onClose={() => setShowToast(false)}
         />
       )}
+
+      {/* Send All Warning Modal */}
+      <SendAllWarningModal
+        isOpen={showSendAllWarning}
+        onClose={() => setShowSendAllWarning(false)}
+        onPreviewAll={handleViewAll}
+        onConfirmSendAll={handleConfirmSendAll}
+        publisherCount={bannerReadyNotifications.length}
+      />
     </div>
   );
 };

@@ -17,6 +17,7 @@ interface EntityMetrics {
   budget: number;
   cpcBid: number;
   cpaGoal: number;
+  duration: 'Daily' | 'Weekly' | 'Monthly';
 }
 
 const priorityOptions: { value: Priority; label: string; icon: React.ComponentType<any>; color: string }[] = [
@@ -427,7 +428,7 @@ export const RequestRecommendationForm: React.FC = () => {
   ];
 
   // Publisher-specific metric allocation function
-  const generatePublisherMetrics = (entityMetrics: { budget: number; cpcBid: number; cpaGoal: number }, publisherId: string, totalPublishers: number) => {
+  const generatePublisherMetrics = (entityMetrics: { budget: number; cpcBid: number; cpaGoal: number; duration: 'Daily' | 'Weekly' | 'Monthly' }, publisherId: string, totalPublishers: number) => {
     // For consistent allocation per publisher, use publisherId as seed
     const publisherSeed = publisherId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const random = (seed: number) => {
@@ -453,7 +454,8 @@ export const RequestRecommendationForm: React.FC = () => {
     return {
       budget: publisherBudget,
       cpcBid: Math.max(publisherCpc, 0.10), // Minimum CPC of $0.10
-      cpaGoal: Math.max(publisherCpa, 1.00)  // Minimum CPA of $1.00
+      cpaGoal: Math.max(publisherCpa, 1.00),  // Minimum CPA of $1.00
+      duration: entityMetrics.duration
     };
   };
 
@@ -463,7 +465,8 @@ export const RequestRecommendationForm: React.FC = () => {
       const defaultMetrics = {
         budget: 0,
         cpcBid: 0,
-        cpaGoal: 0
+        cpaGoal: 0,
+        duration: 'Monthly' as const
       };
       return [defaultMetrics];
     }
@@ -472,7 +475,8 @@ export const RequestRecommendationForm: React.FC = () => {
     const currentEntityMetrics = {
       budget: entityMetrics.budget,
       cpcBid: entityMetrics.cpcBid,
-      cpaGoal: entityMetrics.cpaGoal
+      cpaGoal: entityMetrics.cpaGoal,
+      duration: entityMetrics.duration
     };
 
     // Generate metrics for each publisher
@@ -488,7 +492,8 @@ export const RequestRecommendationForm: React.FC = () => {
     const currentEntityMetrics = {
       budget: entityMetrics.budget,
       cpcBid: entityMetrics.cpcBid,
-      cpaGoal: entityMetrics.cpaGoal
+      cpaGoal: entityMetrics.cpaGoal,
+      duration: entityMetrics.duration
     };
 
     console.log('=== Publisher Allocation Debug ===');
@@ -611,6 +616,9 @@ export const RequestRecommendationForm: React.FC = () => {
                 </div>
                 <div className="text-18 font-semibold text-gray-900">
                   ${entityMetrics.budget.toLocaleString()}
+                </div>
+                <div className="text-12 text-gray-500 mt-2">
+                  {entityMetrics.duration}
                 </div>
               </div>
 

@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Check, X, Plus, Minus, Send, Calendar as CalendarIcon, AlertTriangle, AlertCircle, Clock } from 'lucide-react';
+import { Check, X, Plus, Minus, Send, AlertTriangle, AlertCircle, Clock } from 'lucide-react';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { Textarea } from '../common/Textarea';
-import { Dropdown } from '../common/Dropdown';
 import { EmailTemplate, Priority } from '../../types';
 import { useApp } from '../../context/AppContext';
 
@@ -119,11 +118,34 @@ const DurationDropdown: React.FC<{
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
-}> = ({ options, value, onChange, placeholder }) => {
+  customStartDate?: string;
+  customEndDate?: string;
+}> = ({ options, value, onChange, placeholder, customStartDate, customEndDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   const selectedOption = options.find(opt => opt.value === value);
+  
+  // Format custom date range for display
+  const formatCustomDateRange = () => {
+    if (value === 'Custom' && customStartDate) {
+      const startDate = new Date(customStartDate).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      
+      if (customEndDate) {
+        const endDate = new Date(customEndDate).toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        return `Custom (${startDate} - ${endDate})`;
+      } else {
+        return `Custom (${startDate})`;
+      }
+    }
+    return selectedOption ? selectedOption.label : placeholder;
+  };
   
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -148,7 +170,7 @@ const DurationDropdown: React.FC<{
         `}
       >
         <span className={`block truncate ${selectedOption ? 'text-neutral-900' : 'text-neutral-500'}`}>
-          {selectedOption ? selectedOption.label : placeholder}
+          {formatCustomDateRange()}
         </span>
         <div className="absolute inset-y-0 right-12 flex items-center pointer-events-none">
           <svg 
@@ -245,7 +267,25 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
   const [showCustomDuration, setShowCustomDuration] = useState(false);
   const [customDurationStart, setCustomDurationStart] = useState('');
   const [customDurationEnd, setCustomDurationEnd] = useState('');
+  const customDurationRef = useRef<HTMLDivElement>(null);
   const [cpcBid, setCpcBid] = useState((template as any).cpcBid?.toString() || '2.5');
+  
+  // Handle click outside to close custom duration picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (customDurationRef.current && !customDurationRef.current.contains(event.target as Node)) {
+        setShowCustomDuration(false);
+      }
+    };
+
+    if (showCustomDuration) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCustomDuration]);
   const [cpaGoal, setCpaGoal] = useState((template as any).cpaGoal?.toString() || '45.00');
   const [feedUrl, setFeedUrl] = useState(template.feedUrl || '');
   const [landingPage, setLandingPage] = useState((template as any).landingPageUrl || 'https://careers.acmecorp.com/jobs');
@@ -354,7 +394,7 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                 <span className="text-red-500 mr-4">*</span>Subject:
               </label>
               <Input
-                value={`${(priority && priority !== 'Low') ? `[${priority} Priority] ` : ''}New ${isClient ? 'Client' : template.entityType} Onboarding - ${template.entityName} - Request for Feed Indexing & Goal Validation`}
+                value={`${(priority && priority !== 'Low') ? `[${priority} Priority] ` : ''}${isClient ? `New Client Onboarding - ${template.entityName} - Request for Feed Indexing & Goal Validation` : template.entityType === 'Campaign' ? `New Campaign Setup for ${template.clientName} – ${template.entityName}` : `New Job Group Setup for ${template.clientName} – ${template.entityName}`}`}
                 className="bg-gray-50"
                 readOnly
               />
@@ -365,56 +405,58 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
           <div className="border-t pt-24">
             <h3 className="text-16 font-semibold text-dark-grey mb-16">Email Content</h3>
             
-            {/* Feed URL and Client Application URL - Always show for all entity types */}
-            <div className="grid grid-cols-2 gap-16 mb-16">
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                  <label className="block text-14 font-semibold text-dark-grey">
-                    <span className="text-red-500 mr-4">*</span>Feed URL
-                  </label>
-                  {feedUrl && (
-                    <button
-                      type="button"
-                      onClick={() => setFeedUrl('')}
-                      className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
-                      style={{ color: '#303F9F' }}
-                    >
-                      Clear
-                    </button>
-                  )}
+            {/* Feed URL and Client Application URL - Only show for Client entity type */}
+            {isClient && (
+              <div className="grid grid-cols-2 gap-16 mb-16">
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-14 font-semibold text-dark-grey">
+                      <span className="text-red-500 mr-4">*</span>Feed URL
+                    </label>
+                    {feedUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setFeedUrl('')}
+                        className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
+                        style={{ color: '#303F9F' }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <Input
+                    placeholder="Enter feed URL"
+                    value={feedUrl}
+                    onChange={(e) => setFeedUrl(e.target.value)}
+                    required
+                  />
                 </div>
-                <Input
-                  placeholder="Enter feed URL"
-                  value={feedUrl}
-                  onChange={(e) => setFeedUrl(e.target.value)}
-                  required
-                />
-              </div>
 
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                  <label className="block text-14 font-semibold text-dark-grey">
-                    <span className="text-red-500 mr-4">*</span>Client application URL
-                  </label>
-                  {landingPage && (
-                    <button
-                      type="button"
-                      onClick={() => setLandingPage('')}
-                      className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
-                      style={{ color: '#303F9F' }}
-                    >
-                      Clear
-                    </button>
-                  )}
-            </div>
-                <Input
-                  placeholder="Fetched from MOJO"
-                  value={landingPage}
-                  onChange={(e) => setLandingPage(e.target.value)}
-                  required
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-14 font-semibold text-dark-grey">
+                      <span className="text-red-500 mr-4">*</span>Client application URL
+                    </label>
+                    {landingPage && (
+                      <button
+                        type="button"
+                        onClick={() => setLandingPage('')}
+                        className="text-12 font-normal text-blue-600 hover:text-blue-800 transition-colors"
+                        style={{ color: '#303F9F' }}
+                      >
+                        Clear
+                      </button>
+                    )}
+              </div>
+                  <Input
+                    placeholder="Fetched from MOJO"
+                    value={landingPage}
+                    onChange={(e) => setLandingPage(e.target.value)}
+                    required
                 />
               </div>
             </div>
+            )}
 
             {/* Optional Fields */}
             <div className="grid grid-cols-2 gap-16 mb-16">
@@ -446,10 +488,10 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                   <span className="absolute left-16 top-1/2 transform -translate-y-1/2 text-14 text-gray-500 pointer-events-none">
                     $
                   </span>
-                </div>
+              </div>
             </div>
 
-              <div className="space-y-8">
+              <div className="space-y-8 relative">
                 <div className="flex items-center justify-between">
                   <label className="block text-14 font-semibold text-dark-grey">
                     <span className="text-red-500 mr-4">*</span>Duration
@@ -460,14 +502,81 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                     { value: 'Daily', label: 'Daily' },
                     { value: 'Weekly', label: 'Weekly' },
                     { value: 'Monthly', label: 'Monthly' },
-                    { value: 'Quarterly', label: 'Quarterly' },
                     { value: 'Lifetime', label: 'Lifetime' },
                     { value: 'Custom', label: 'Custom' },
                   ]}
                   value={duration}
-                  onChange={(value) => setDuration(value)}
+                  onChange={(value) => {
+                    setDuration(value);
+                    if (value === 'Custom') {
+                      setShowCustomDuration(true);
+                    } else {
+                      setShowCustomDuration(false);
+                    }
+                  }}
                   placeholder="Select duration"
+                  customStartDate={customDurationStart}
+                  customEndDate={customDurationEnd}
                 />
+                
+                {/* Custom Duration Date Picker - Overlay */}
+                {showCustomDuration && (
+                  <div ref={customDurationRef} className="absolute top-full left-0 mt-8 w-full max-w-md bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-16">
+                    <div className="space-y-12">
+                      <div className="text-14 font-medium text-gray-700 mb-8">
+                        Select Custom Duration
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-12">
+                        <div>
+                          <label className="block text-12 font-medium text-gray-600 mb-4">
+                            Start Date
+                          </label>
+                          <input
+                            type="date"
+                            value={customDurationStart}
+                            onChange={(e) => setCustomDurationStart(e.target.value)}
+                            className="w-full px-12 py-8 text-14 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-12 font-medium text-gray-600 mb-4">
+                            End Date (Optional)
+                          </label>
+                          <input
+                            type="date"
+                            value={customDurationEnd}
+                            onChange={(e) => setCustomDurationEnd(e.target.value)}
+                            min={customDurationStart}
+                            placeholder="Leave empty for single day"
+                            className="w-full px-12 py-8 text-14 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end gap-8 pt-8">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCustomDuration(false);
+                            setCustomDurationStart('');
+                            setCustomDurationEnd('');
+                          }}
+                          className="px-12 py-6 text-12 font-medium text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowCustomDuration(false)}
+                          className="px-12 py-6 text-12 font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -588,7 +697,7 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                   {showLocations ? <Minus size={16} /> : <Plus size={16} />}
                   Top Locations
                 </button>
-              </div>
+            </div>
               {showLocations && (
                 <div className="mb-16">
                   <Input
@@ -649,13 +758,13 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                   </div>
                   <input
                     type="date"
-                    value={goLiveDate}
+                value={goLiveDate}
                     onChange={(e) => setGoLiveDate(e.target.value)}
                     min={new Date().toISOString().split('T')[0]} // Only allow future dates
                     className="w-full px-16 py-10 text-14 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
-                    placeholder="Select go live date"
-                  />
-                </div>
+                placeholder="Select go live date"
+              />
+            </div>
               )}
             </div>
           </div>
@@ -694,7 +803,7 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                       </p>
                     ) : (
                       <p className="text-14 leading-relaxed">
-                        We wanted to inform you that a new <strong>{template.entityType?.toLowerCase()}</strong> has been set up for <strong>{template.clientName}</strong> – <strong>{template.entityName}</strong>.
+                        We wanted to inform you that a new <strong>{template.entityType === 'Campaign' ? 'campaign' : 'job group'}</strong> has been set up for <strong>{template.clientName}</strong> – <strong>{template.entityName}</strong>.
                       </p>
                     )}
                   </div>
@@ -704,7 +813,7 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                     {/* Entity Details Section */}
                     <div className="mb-24">
                       <h3 className="text-16 font-semibold mb-16" style={{ color: '#374151' }}>
-                        📋 {isClient ? 'Client Setup Details' : 'Entity Setup Details'}
+                        📋 {isClient ? 'Client Setup Details' : template.entityType === 'Campaign' ? 'Campaign Setup Details' : 'Job Group Setup Details'}
                       </h3>
 
                       <div className="grid grid-cols-1 gap-16">
@@ -730,11 +839,7 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
                               <span className="text-14">{template.clientName}</span>
                             </div>
                             <div>
-                              <span className="font-medium block mb-4" style={{ color: '#374151' }}>Entity Type:</span>
-                              <span className="text-14">{template.entityType}</span>
-                            </div>
-                            <div>
-                              <span className="font-medium block mb-4" style={{ color: '#374151' }}>Entity Name:</span>
+                              <span className="font-medium block mb-4" style={{ color: '#374151' }}>{template.entityType === 'Campaign' ? 'Campaign:' : 'Job Group:'}</span>
                               <span className="text-14">{template.entityName}</span>
                             </div>
                           </>
@@ -771,7 +876,30 @@ export const EmailView: React.FC<EmailViewProps> = ({ template, onClose }) => {
 
                       <div className="mt-16">
                         <span className="font-medium block mb-4" style={{ color: '#374151' }}>Duration:</span>
-                        <span className="text-14">{duration}</span>
+                        <span className="text-14">
+                          {duration === 'Custom' && customDurationStart ? (
+                            (() => {
+                              const startDate = new Date(customDurationStart).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric',
+                                year: 'numeric'
+                              });
+                              
+                              if (customDurationEnd) {
+                                const endDate = new Date(customDurationEnd).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                });
+                                return `Custom (${startDate} - ${endDate})`;
+                              } else {
+                                return `Custom (${startDate})`;
+                              }
+                            })()
+                          ) : (
+                            duration
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>

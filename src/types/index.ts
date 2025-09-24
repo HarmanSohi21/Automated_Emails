@@ -21,6 +21,7 @@ export interface ClientMetrics {
   budget: number;
   cpcBid: number;
   cpaGoal: number;
+  duration: 'Daily' | 'Weekly' | 'Monthly';
 }
 
 export interface Client {
@@ -61,6 +62,8 @@ export interface EmailTemplate {
   partnerInsightsUrl?: string;
   isEasyApply: boolean;
   status?: FeedStatus;
+  entityType?: EntityType;
+  entityName?: string;
 }
 
 export interface EmailNotification {

@@ -1,11 +1,12 @@
 import React from 'react';
 import { Button } from '../common/Button';
-import { X, FileText, AlertTriangle } from 'lucide-react';
+import { X, FileText, AlertTriangle, Send } from 'lucide-react';
 
 interface SendAllWarningModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPreviewAll: () => void;
+  onConfirmSendAll: () => void;
   publisherCount: number;
 }
 
@@ -13,6 +14,7 @@ export const SendAllWarningModal: React.FC<SendAllWarningModalProps> = ({
   isOpen,
   onClose,
   onPreviewAll,
+  onConfirmSendAll,
   publisherCount
 }) => {
   if (!isOpen) return null;
@@ -69,21 +71,27 @@ export const SendAllWarningModal: React.FC<SendAllWarningModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between p-24 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-12 p-24 border-t border-gray-200">
             <Button
               variant="secondary"
-              onClick={onClose}
-              icon={<X size={16} />}
+              onClick={() => {
+                onClose();
+                onPreviewAll();
+              }}
+              icon={<FileText size={16} />}
             >
-              Cancel
+              Preview All
             </Button>
             
             <Button
               variant="primary"
-              onClick={onPreviewAll}
-              icon={<FileText size={16} />}
+              onClick={() => {
+                onClose();
+                onConfirmSendAll();
+              }}
+              icon={<Send size={16} />}
             >
-              Preview All Emails
+              Send All
             </Button>
           </div>
         </div>
